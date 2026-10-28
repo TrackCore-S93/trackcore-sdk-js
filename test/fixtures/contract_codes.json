@@ -1,0 +1,426 @@
+[
+  {
+    "code": "ambiguous_credentials",
+    "status": 400,
+    "category": "request",
+    "retry_after": "forbidden",
+    "docs_url": "https://docs.trackcore.dev/errors/ambiguous_credentials",
+    "required_fields": [],
+    "allowed_fields": [],
+    "message_template": "Send either a secret key or a session token, not both."
+  },
+  {
+    "code": "image_fetch_failed",
+    "status": 400,
+    "category": "request",
+    "retry_after": "forbidden",
+    "docs_url": "https://docs.trackcore.dev/errors/image_fetch_failed",
+    "required_fields": [],
+    "allowed_fields": [],
+    "message_template": "The image at the supplied URL could not be fetched."
+  },
+  {
+    "code": "invalid_barcode",
+    "status": 400,
+    "category": "request",
+    "retry_after": "forbidden",
+    "docs_url": "https://docs.trackcore.dev/errors/invalid_barcode",
+    "required_fields": [],
+    "allowed_fields": [
+      "accepted"
+    ],
+    "message_template": "The supplied barcode is not valid."
+  },
+  {
+    "code": "invalid_quantity",
+    "status": 400,
+    "category": "request",
+    "retry_after": "forbidden",
+    "docs_url": "https://docs.trackcore.dev/errors/invalid_quantity",
+    "required_fields": [],
+    "allowed_fields": [],
+    "message_template": "`consumed_quantity` must be a positive number."
+  },
+  {
+    "code": "invalid_request",
+    "status": 400,
+    "category": "request",
+    "retry_after": "forbidden",
+    "docs_url": "https://docs.trackcore.dev/errors/invalid_request",
+    "required_fields": [
+      "parameter"
+    ],
+    "allowed_fields": [
+      "accepted",
+      "limit",
+      "parameter"
+    ],
+    "message_template": "The request was rejected: {parameter} is missing or not valid."
+  },
+  {
+    "code": "invalid_servings",
+    "status": 400,
+    "category": "request",
+    "retry_after": "forbidden",
+    "docs_url": "https://docs.trackcore.dev/errors/invalid_servings",
+    "required_fields": [],
+    "allowed_fields": [],
+    "message_template": "`recipe_servings` must be a positive number."
+  },
+  {
+    "code": "query_too_long",
+    "status": 400,
+    "category": "request",
+    "retry_after": "forbidden",
+    "docs_url": "https://docs.trackcore.dev/errors/query_too_long",
+    "required_fields": [
+      "limit"
+    ],
+    "allowed_fields": [
+      "limit"
+    ],
+    "message_template": "The search query is longer than {limit} characters."
+  },
+  {
+    "code": "query_too_short",
+    "status": 400,
+    "category": "request",
+    "retry_after": "forbidden",
+    "docs_url": "https://docs.trackcore.dev/errors/query_too_short",
+    "required_fields": [
+      "limit"
+    ],
+    "allowed_fields": [
+      "limit"
+    ],
+    "message_template": "The search query is shorter than {limit} characters."
+  },
+  {
+    "code": "text_required",
+    "status": 400,
+    "category": "request",
+    "retry_after": "forbidden",
+    "docs_url": "https://docs.trackcore.dev/errors/text_required",
+    "required_fields": [],
+    "allowed_fields": [],
+    "message_template": "`text` is required and must not be empty."
+  },
+  {
+    "code": "text_too_long",
+    "status": 400,
+    "category": "request",
+    "retry_after": "forbidden",
+    "docs_url": "https://docs.trackcore.dev/errors/text_too_long",
+    "required_fields": [
+      "limit"
+    ],
+    "allowed_fields": [
+      "limit"
+    ],
+    "message_template": "`text` is longer than the {limit} character limit."
+  },
+  {
+    "code": "timezone_required",
+    "status": 400,
+    "category": "request",
+    "retry_after": "forbidden",
+    "docs_url": "https://docs.trackcore.dev/errors/timezone_required",
+    "required_fields": [],
+    "allowed_fields": [],
+    "message_template": "An IANA `timezone` is required on every diary write."
+  },
+  {
+    "code": "too_many_ids",
+    "status": 400,
+    "category": "request",
+    "retry_after": "forbidden",
+    "docs_url": "https://docs.trackcore.dev/errors/too_many_ids",
+    "required_fields": [
+      "limit"
+    ],
+    "allowed_fields": [
+      "limit"
+    ],
+    "message_template": "At most {limit} ids may be requested in one call."
+  },
+  {
+    "code": "clock_skew",
+    "status": 401,
+    "category": "authentication",
+    "retry_after": "forbidden",
+    "docs_url": "https://docs.trackcore.dev/errors/clock_skew",
+    "required_fields": [
+      "limit"
+    ],
+    "allowed_fields": [
+      "limit"
+    ],
+    "message_template": "The device clock is outside the permitted {limit} second leeway."
+  },
+  {
+    "code": "credential_malformed",
+    "status": 401,
+    "category": "authentication",
+    "retry_after": "forbidden",
+    "docs_url": "https://docs.trackcore.dev/errors/credential_malformed",
+    "required_fields": [],
+    "allowed_fields": [],
+    "message_template": "The API credential could not be parsed."
+  },
+  {
+    "code": "credential_missing",
+    "status": 401,
+    "category": "authentication",
+    "retry_after": "forbidden",
+    "docs_url": "https://docs.trackcore.dev/errors/credential_missing",
+    "required_fields": [],
+    "allowed_fields": [],
+    "message_template": "No API credential was supplied."
+  },
+  {
+    "code": "credential_revoked",
+    "status": 401,
+    "category": "authentication",
+    "retry_after": "forbidden",
+    "docs_url": "https://docs.trackcore.dev/errors/credential_revoked",
+    "required_fields": [],
+    "allowed_fields": [],
+    "message_template": "This API credential has been revoked."
+  },
+  {
+    "code": "credential_unknown",
+    "status": 401,
+    "category": "authentication",
+    "retry_after": "forbidden",
+    "docs_url": "https://docs.trackcore.dev/errors/credential_unknown",
+    "required_fields": [],
+    "allowed_fields": [],
+    "message_template": "This API credential is not recognised."
+  },
+  {
+    "code": "key_revoked",
+    "status": 401,
+    "category": "authentication",
+    "retry_after": "forbidden",
+    "docs_url": "https://docs.trackcore.dev/errors/key_revoked",
+    "required_fields": [],
+    "allowed_fields": [],
+    "message_template": "This key's rotation overlap window has expired."
+  },
+  {
+    "code": "session_expired",
+    "status": 401,
+    "category": "authentication",
+    "retry_after": "forbidden",
+    "docs_url": "https://docs.trackcore.dev/errors/session_expired",
+    "required_fields": [],
+    "allowed_fields": [],
+    "message_template": "The end-user session token has expired."
+  },
+  {
+    "code": "quota_exceeded",
+    "status": 402,
+    "category": "rate",
+    "retry_after": "optional",
+    "docs_url": "https://docs.trackcore.dev/errors/quota_exceeded",
+    "required_fields": [],
+    "allowed_fields": [],
+    "message_template": "The plan's allowance for this period is exhausted."
+  },
+  {
+    "code": "dpa_required",
+    "status": 403,
+    "category": "authorization",
+    "retry_after": "forbidden",
+    "docs_url": "https://docs.trackcore.dev/errors/dpa_required",
+    "required_fields": [
+      "capability"
+    ],
+    "allowed_fields": [
+      "capability"
+    ],
+    "message_template": "A signed Data Processing Agreement is required for {capability}."
+  },
+  {
+    "code": "entitlement_required",
+    "status": 403,
+    "category": "authorization",
+    "retry_after": "forbidden",
+    "docs_url": "https://docs.trackcore.dev/errors/entitlement_required",
+    "required_fields": [
+      "capability"
+    ],
+    "allowed_fields": [
+      "capability"
+    ],
+    "message_template": "Your plan does not include the {capability} capability."
+  },
+  {
+    "code": "user_scope_violation",
+    "status": 403,
+    "category": "authorization",
+    "retry_after": "forbidden",
+    "docs_url": "https://docs.trackcore.dev/errors/user_scope_violation",
+    "required_fields": [],
+    "allowed_fields": [],
+    "message_template": "This session token is not scoped to that end-user."
+  },
+  {
+    "code": "resource_not_found",
+    "status": 404,
+    "category": "resource",
+    "retry_after": "forbidden",
+    "docs_url": "https://docs.trackcore.dev/errors/resource_not_found",
+    "required_fields": [],
+    "allowed_fields": [],
+    "message_template": "No such resource."
+  },
+  {
+    "code": "user_not_found",
+    "status": 404,
+    "category": "resource",
+    "retry_after": "forbidden",
+    "docs_url": "https://docs.trackcore.dev/errors/user_not_found",
+    "required_fields": [],
+    "allowed_fields": [],
+    "message_template": "No such end-user."
+  },
+  {
+    "code": "food_gone",
+    "status": 410,
+    "category": "resource",
+    "retry_after": "forbidden",
+    "docs_url": "https://docs.trackcore.dev/errors/food_gone",
+    "required_fields": [],
+    "allowed_fields": [],
+    "message_template": "This food is no longer resolvable from its provider."
+  },
+  {
+    "code": "image_too_large",
+    "status": 413,
+    "category": "request",
+    "retry_after": "forbidden",
+    "docs_url": "https://docs.trackcore.dev/errors/image_too_large",
+    "required_fields": [
+      "limit_bytes",
+      "measured_bytes"
+    ],
+    "allowed_fields": [
+      "limit_bytes",
+      "measured_bytes"
+    ],
+    "message_template": "The image is {measured_bytes} bytes; the limit is {limit_bytes}."
+  },
+  {
+    "code": "unsupported_image_format",
+    "status": 415,
+    "category": "request",
+    "retry_after": "forbidden",
+    "docs_url": "https://docs.trackcore.dev/errors/unsupported_image_format",
+    "required_fields": [],
+    "allowed_fields": [],
+    "message_template": "Only image/jpeg and image/png are accepted."
+  },
+  {
+    "code": "unsupported_media_type",
+    "status": 415,
+    "category": "request",
+    "retry_after": "forbidden",
+    "docs_url": "https://docs.trackcore.dev/errors/unsupported_media_type",
+    "required_fields": [],
+    "allowed_fields": [],
+    "message_template": "This endpoint accepts application/json only."
+  },
+  {
+    "code": "food_unusable",
+    "status": 422,
+    "category": "resource",
+    "retry_after": "forbidden",
+    "docs_url": "https://docs.trackcore.dev/errors/food_unusable",
+    "required_fields": [],
+    "allowed_fields": [],
+    "message_template": "This food has no usable serving data and cannot be logged."
+  },
+  {
+    "code": "recipe_cycle_detected",
+    "status": 422,
+    "category": "request",
+    "retry_after": "forbidden",
+    "docs_url": "https://docs.trackcore.dev/errors/recipe_cycle_detected",
+    "required_fields": [],
+    "allowed_fields": [],
+    "message_template": "This recipe would contain itself."
+  },
+  {
+    "code": "recipe_depth_exceeded",
+    "status": 422,
+    "category": "request",
+    "retry_after": "forbidden",
+    "docs_url": "https://docs.trackcore.dev/errors/recipe_depth_exceeded",
+    "required_fields": [
+      "limit"
+    ],
+    "allowed_fields": [
+      "limit"
+    ],
+    "message_template": "Recipes may nest at most {limit} deep."
+  },
+  {
+    "code": "serving_not_found",
+    "status": 422,
+    "category": "resource",
+    "retry_after": "forbidden",
+    "docs_url": "https://docs.trackcore.dev/errors/serving_not_found",
+    "required_fields": [],
+    "allowed_fields": [],
+    "message_template": "That serving is not present on this food."
+  },
+  {
+    "code": "rate_limited",
+    "status": 429,
+    "category": "rate",
+    "retry_after": "required",
+    "docs_url": "https://docs.trackcore.dev/errors/rate_limited",
+    "required_fields": [],
+    "allowed_fields": [],
+    "message_template": "Too many requests."
+  },
+  {
+    "code": "internal_error",
+    "status": 500,
+    "category": "server",
+    "retry_after": "forbidden",
+    "docs_url": "https://docs.trackcore.dev/errors/internal_error",
+    "required_fields": [],
+    "allowed_fields": [],
+    "message_template": "Something went wrong on TrackCore's side."
+  },
+  {
+    "code": "upstream_unavailable",
+    "status": 502,
+    "category": "dependency",
+    "retry_after": "optional",
+    "docs_url": "https://docs.trackcore.dev/errors/upstream_unavailable",
+    "required_fields": [
+      "upstream"
+    ],
+    "allowed_fields": [
+      "upstream"
+    ],
+    "message_template": "A service TrackCore depends on is unavailable."
+  },
+  {
+    "code": "capability_maintenance",
+    "status": 503,
+    "category": "maintenance",
+    "retry_after": "required",
+    "docs_url": "https://docs.trackcore.dev/errors/capability_maintenance",
+    "required_fields": [
+      "capability"
+    ],
+    "allowed_fields": [
+      "capability"
+    ],
+    "message_template": "{capability} is in planned maintenance."
+  }
+]
