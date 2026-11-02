@@ -80,6 +80,14 @@ export interface RequestOptions {
   readonly path: string;
   readonly query?: Readonly<Record<string, string | number | undefined>> | undefined;
   readonly body?: unknown;
+  /**
+   * A body sent as-is. Used for `multipart/form-data`, where `fetch` has to
+   * set the boundary itself. When this is set, {@link body} is ignored and
+   * `Content-Type` is left alone.
+   */
+  readonly rawBody?: BodyInit | undefined;
+  /** Per-attempt timeout for this call. Falls back to the client's timeout. */
+  readonly timeoutMs?: number | undefined;
   readonly signal?: AbortSignal | undefined;
   readonly idempotencyKey?: string | undefined;
   readonly headers?: Readonly<Record<string, string>> | undefined;
@@ -168,7 +176,13 @@ export class Transport {
       let bodyText = "";
 
       try {
-        response = await this.#attempt(method, url, options, cached, Math.min(this.#timeoutMs, remaining));
+        response = await this.#attempt(
+          method,
+          url,
+          options,
+          cached,
+          Math.min(options.timeoutMs ?? this.#timeoutMs, remaining),
+        );
         bodyText = await response.text();
         outcome = {
           kind: "response",
@@ -283,7 +297,9 @@ export class Transport {
     if (options.idempotencyKey !== undefined) headers["Idempotency-Key"] = options.idempotencyKey;
 
     const init: RequestInit = { method, headers, signal: controller.signal };
-    if (options.body !== undefined) {
+    if (options.rawBody !== undefined) {
+      init.body = options.rawBody;
+    } else if (options.body !== undefined) {
       headers["Content-Type"] = "application/json";
       init.body = JSON.stringify(options.body);
     }

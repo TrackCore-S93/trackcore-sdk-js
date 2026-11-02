@@ -50,11 +50,18 @@ describe("SDK-W1: no device capability exists in this SDK", () => {
 
   it("the public barrel exports no device capability", async () => {
     const api = (await import("../src/index.js")) as Record<string, unknown>;
-    const names = Object.keys(api).join(" ");
-    for (const word of ["health", "voice", "camera", "scanner", "barcode", "microphone"]) {
+    const names = Object.keys(api);
+    expect(names).toContain("lookupBarcode");
+    const joined = names.join(" ").toLowerCase();
+    for (const word of ["health", "voice", "camera", "scanner", "microphone"]) {
       // `TrackCore.health()` is `GET /healthz`, a liveness probe, and is a
       // method rather than an export — so the barrel itself must be clean.
-      expect(names.toLowerCase(), word).not.toContain(word);
+      expect(joined, word).not.toContain(word);
+    }
+    // Server-side lookup is the one barcode export. A camera or a scanner
+    // must not appear beside it, including under a name that also says barcode.
+    for (const name of names) {
+      expect(name).not.toMatch(/scan|camera|vision|microphone/i);
     }
   });
 });

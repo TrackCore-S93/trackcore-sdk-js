@@ -11,6 +11,9 @@
  */
 
 export { TrackCore, DEFAULT_BASE_URL, VERSION, type TrackCoreOptions } from "./client.js";
+export type { ExtractLabelOptions, LabelImage } from "./resources/label.js";
+export type { RecognizeImageOptions } from "./resources/image.js";
+export type { SearchSpeechOptions } from "./resources/nlp.js";
 
 // -- the numeric contract ---------------------------------------------------
 export { Decimal, isDecimal } from "./decimal.js";
@@ -59,17 +62,22 @@ export {
   searchFoods,
   getFood,
   batchFoods,
+  lookupBarcode,
   BATCH_MAX_IDS,
   QUERY_MAX_LENGTH,
   QUERY_MIN_LENGTH,
   type BatchFoodsOptions,
   type GetFoodOptions,
   type HasTransport,
+  type LookupBarcodeOptions,
   type SearchFoodsParams,
 } from "./resources/foods.js";
 
 // -- models (PLACEHOLDERS — T-107 regenerates these from the OpenAPI spec) ---
 export type {
+  BarcodeFormat,
+  BarcodeLookup,
+  BarcodeStatus,
   BatchReadResult,
   Capability,
   CapabilityCatalogue,

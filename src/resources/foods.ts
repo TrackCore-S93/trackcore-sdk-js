@@ -21,8 +21,8 @@
  */
 
 import { ValidationError } from "../errors.js";
-import { decodeBatchReadResult, decodeFood, decodeSearchResults } from "../decode.js";
-import type { BatchReadResult, Food, SearchResults } from "../models.js";
+import { decodeBarcodeLookup, decodeBatchReadResult, decodeFood, decodeSearchResults } from "../decode.js";
+import type { BarcodeLookup, BatchReadResult, Food, SearchResults } from "../models.js";
 import type { Transport } from "../transport.js";
 
 /** Anything carrying a transport. `TrackCore` satisfies it. */
@@ -151,4 +151,34 @@ export async function batchFoods(
     revalidate: options.revalidate,
   });
   return decodeBatchReadResult(response.body);
+}
+
+export interface LookupBarcodeOptions {
+  readonly signal?: AbortSignal | undefined;
+}
+
+/**
+ * `GET /v1/foods/barcode/{code}` — resolve a UPC or EAN on the server.
+ *
+ * A miss is a result, `status: "not_found"` and `food: null`, not a throw.
+ * `invalid_barcode` is the throw, and it means the digits were rejected before
+ * any provider was called.
+ *
+ * There is no camera method beside this. Scanning a code is a device
+ * capability and does not belong in this package (SDK-W1, D-015).
+ */
+export async function lookupBarcode(
+  client: HasTransport,
+  code: string,
+  options: LookupBarcodeOptions = {},
+): Promise<BarcodeLookup> {
+  if (typeof code !== "string" || code.trim() === "") {
+    throw new ValidationError("code", "lookupBarcode: a barcode is required");
+  }
+  const response = await client.transport.request({
+    method: "GET",
+    path: `/v1/foods/barcode/${encodeURIComponent(code.trim())}`,
+    signal: options.signal,
+  });
+  return decodeBarcodeLookup(response.body);
 }

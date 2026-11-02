@@ -154,6 +154,10 @@ const DECLARED: Record<string, { all: string[]; optional: string[] }> = {
     optional: [],
   },
   BatchReadResult: { all: ["found", "missing"], optional: [] },
+  BarcodeLookup: {
+    all: ["barcode", "barcode_format", "status", "food", "resolved_by", "suggestion_url"],
+    optional: ["suggestion_url"],
+  },
   Capability: {
     all: [
       "code",

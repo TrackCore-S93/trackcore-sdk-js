@@ -10,7 +10,7 @@ import { join } from "node:path";
 import { TrackCore } from "../src/client.js";
 import { Decimal } from "../src/decimal.js";
 import { ResourceError, ValidationError } from "../src/errors.js";
-import { BATCH_MAX_IDS, batchFoods, getFood, searchFoods } from "../src/resources/foods.js";
+import { BATCH_MAX_IDS, batchFoods, getFood, lookupBarcode, searchFoods } from "../src/resources/foods.js";
 import type { FetchLike } from "../src/transport.js";
 
 const FIXTURES = join(import.meta.dirname, "fixtures");
@@ -214,6 +214,60 @@ describe("the tree-shakeable functions are the same code", () => {
 
     const { client: tc4 } = client(fixture("batch_found_missing.json"));
     await expect(batchFoods(tc4, [APPLE_ID])).resolves.toMatchObject({ missing: expect.any(Array) });
+  });
+});
+
+describe("barcode lookup", () => {
+  const hit = JSON.stringify({
+    barcode: "3017624010701",
+    barcode_format: "EAN_13",
+    status: "found",
+    food: { servings: [{ metric_amount: 138.0 }] },
+    resolved_by: "open_food_facts",
+  }).replace("138", "138.000");
+
+  it("keeps the decimal lexeme and does not throw on a miss", async () => {
+    const { client: tc, urls } = client(hit);
+    const found = await tc.barcode.lookup("3017624010701");
+    expect(urls[0]).toBe("https://api.trackcore.dev/v1/foods/barcode/3017624010701");
+    expect(found.status).toBe("found");
+    expect(found.food?.servings[0]?.metric_amount).toEqual(new Decimal("138.000"));
+    expect("scan" in tc.barcode).toBe(false);
+
+    const miss = JSON.stringify({
+      barcode: "96385074",
+      barcode_format: "EAN_8",
+      status: "not_found",
+      food: null,
+      resolved_by: null,
+      suggestion_url: "/v1/foods/suggestions",
+    });
+    const { client: missed } = client(miss);
+    const result = await missed.barcode.lookup("96385074");
+    expect(result.status).toBe("not_found");
+    expect(result.food).toBeNull();
+    expect(result.suggestion_url).toBe("/v1/foods/suggestions");
+  });
+
+  it("surfaces invalid_barcode from the server", async () => {
+    const { client: tc } = client(
+      JSON.stringify({
+        error: {
+          code: "invalid_barcode",
+          message: "The supplied barcode is not valid.",
+          request_id: "req_test",
+          docs_url: "https://trackcore.dev/docs/errors/invalid_barcode",
+          retry_after_seconds: null,
+        },
+      }),
+      400,
+    );
+    await expect(tc.barcode.lookup("abc")).rejects.toMatchObject({ code: "invalid_barcode" });
+  });
+
+  it("lookupBarcode is the same call as barcode.lookup", async () => {
+    const { client: tc } = client(hit);
+    await expect(lookupBarcode(tc, "3017624010701")).resolves.toMatchObject({ status: "found" });
   });
 });
 

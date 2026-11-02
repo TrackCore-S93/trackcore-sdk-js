@@ -98,7 +98,7 @@ export type CarbohydrateBasis = "total" | "net";
 export type NutrientUnit = "g" | "kcal" | "mcg" | "mg";
 
 /** The provider a food is attributed to. `computed` is legal for a *field*, never the object. */
-export type ProvenanceSource = "fatsecret" | "open_food_facts";
+export type ProvenanceSource = "fatsecret" | "open_food_facts" | "usda" | "cnf";
 
 /** RFC 3339 in UTC, to whole seconds, always with a literal `Z`. */
 export type Timestamp = string;
@@ -314,6 +314,32 @@ export interface CapabilityCatalogue {
   /** PF-K5: a test credential is served by the same code path and marked here. */
   readonly environment: "live" | "test";
   readonly capabilities: readonly Capability[];
+}
+
+/** The symbology a barcode was accepted as. */
+export type BarcodeFormat = "UPC_A" | "UPC_E" | "EAN_8" | "EAN_13";
+
+/** `found` resolved a food. `not_found` is a successful response, not an error. */
+export type BarcodeStatus = "found" | "not_found";
+
+/**
+ * `GET /v1/foods/barcode/{code}`.
+ *
+ * A miss is this object with `status: "not_found"` and `food: null`. It does
+ * not throw. `invalid_barcode` is the error, and it means the digits never
+ * reached a provider.
+ */
+export interface BarcodeLookup {
+  /** The digits the caller sent. A UPC-E is echoed as submitted. */
+  readonly barcode: string;
+  readonly barcode_format: BarcodeFormat;
+  readonly status: BarcodeStatus;
+  /** `food_type` is `scan_food` on a hit. `null` on a miss. */
+  readonly food: Food | null;
+  /** Which provider resolved the food. `null` on a miss. */
+  readonly resolved_by: "fatsecret" | "open_food_facts" | null;
+  /** Present on a miss: where a customer can submit the unresolved code. */
+  readonly suggestion_url?: string;
 }
 
 /** `GET /healthz` and `GET /readyz`. Liveness only; it touches nothing. */

@@ -3,9 +3,9 @@
  *
  * Deliberately small. This SDK is a thin HTTP client (D-015): server
  * capabilities only, no health, no voice, no camera, not in the code and not in
- * the type definitions (SDK-W1). A method that does not exist teaches the gap
- * through autocomplete; a method that exists and throws teaches it at 2am in
- * production (D-004, D-015).
+ * the type definitions (SDK-W1). Barcode lookup is a server call. A camera
+ * method that does not exist teaches that gap through autocomplete; a method
+ * that exists and throws teaches it at 2am in production (D-004, D-015).
  */
 
 import { Credential, type Warn } from "./credentials.js";
@@ -23,12 +23,22 @@ import {
 import {
   batchFoods,
   getFood,
+  lookupBarcode,
   searchFoods,
   type BatchFoodsOptions,
   type GetFoodOptions,
+  type LookupBarcodeOptions,
   type SearchFoodsParams,
 } from "./resources/foods.js";
-import type { BatchReadResult, Food, SearchResults } from "./models.js";
+import { extractLabel, type ExtractLabelOptions, type LabelImage } from "./resources/label.js";
+import {
+  recognizeFood,
+  recognizeFridge,
+  type RecognizeImageOptions,
+} from "./resources/image.js";
+import { searchSpeech, searchText, type SearchSpeechOptions } from "./resources/nlp.js";
+import type { JsonObject } from "./json.js";
+import type { BarcodeLookup, BatchReadResult, Food, SearchResults } from "./models.js";
 
 /** The SDK version, stamped into the `User-Agent`. Kept in step with package.json. */
 export const VERSION = "0.1.0";
@@ -112,6 +122,59 @@ export class TrackCore {
     /** `GET /v1/foods?ids=…`. See {@link batchFoods}. */
     batch: (ids: readonly string[], options?: BatchFoodsOptions): Promise<BatchReadResult> =>
       batchFoods(this, ids, options),
+  };
+
+  readonly barcode = {
+    /**
+     * `GET /v1/foods/barcode/{code}`. A miss resolves; it does not throw.
+     * There is no `scan` method in this SDK.
+     */
+    lookup: (code: string, options?: LookupBarcodeOptions): Promise<BarcodeLookup> =>
+      lookupBarcode(this, code, options),
+  };
+
+  readonly label = {
+    /**
+     * `POST /v1/label`. Sends a photo and returns the extraction.
+     *
+     * Does not open a camera. Pass the bytes from a capture or a file picker.
+     * A photo that is not a label resolves with `status: "not_a_label"` and
+     * `food: null`. It does not throw.
+     */
+    extract: (image: LabelImage, options?: ExtractLabelOptions): Promise<JsonObject> =>
+      extractLabel(this, image, options),
+  };
+
+  readonly image = {
+    /**
+     * `POST /v1/image/food`. Sends a meal photo and returns TrackCore foods.
+     * Does not open a camera. `status: "no_match"` means nothing in the photo
+     * was recognised. It does not throw.
+     */
+    food: (image: LabelImage, options?: RecognizeImageOptions): Promise<JsonObject> =>
+      recognizeFood(this, image, options),
+    /**
+     * `POST /v1/image/fridge`. Same recognition as {@link TrackCore.image.food},
+     * for a fridge photo. Requires `ai.fridge`. Holding `ai.food_scan` does
+     * not unlock it.
+     */
+    fridge: (image: LabelImage, options?: RecognizeImageOptions): Promise<JsonObject> =>
+      recognizeFridge(this, image, options),
+  };
+
+  readonly nlp = {
+    /**
+     * `POST /v1/nlp` with a transcript. Searches the catalog for ten foods.
+     * Does not transcribe.
+     */
+    search: (text: string, options?: SearchSpeechOptions): Promise<JsonObject> =>
+      searchText(this, text, options),
+    /**
+     * `POST /v1/nlp` with a recording. whisper.cpp turns it into text, then
+     * the catalog is searched for ten foods. Pass bytes the app already recorded.
+     */
+    fromSpeech: (audio: LabelImage, options?: SearchSpeechOptions): Promise<JsonObject> =>
+      searchSpeech(this, audio, options),
   };
 
   readonly capabilities = {

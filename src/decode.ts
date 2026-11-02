@@ -26,7 +26,14 @@
 
 import type { Decimal } from "./decimal.js";
 import type { JsonValue } from "./json.js";
-import type { BatchReadResult, CapabilityCatalogue, Food, ProbeOk, SearchResults } from "./models.js";
+import type {
+  BarcodeLookup,
+  BatchReadResult,
+  CapabilityCatalogue,
+  Food,
+  ProbeOk,
+  SearchResults,
+} from "./models.js";
 
 /**
  * The only fields in the whole API that become `number` rather than `Decimal`.
@@ -87,6 +94,7 @@ function decode<T>(body: JsonValue): T {
 }
 
 export const decodeFood = (body: JsonValue): Food => decode<Food>(body);
+export const decodeBarcodeLookup = (body: JsonValue): BarcodeLookup => decode<BarcodeLookup>(body);
 export const decodeSearchResults = (body: JsonValue): SearchResults => decode<SearchResults>(body);
 export const decodeBatchReadResult = (body: JsonValue): BatchReadResult => decode<BatchReadResult>(body);
 export const decodeCapabilityCatalogue = (body: JsonValue): CapabilityCatalogue =>
