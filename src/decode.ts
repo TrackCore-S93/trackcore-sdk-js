@@ -30,9 +30,19 @@ import type {
   BarcodeLookup,
   BatchReadResult,
   CapabilityCatalogue,
+  CardList,
+  CopyResult,
+  DailyNutrition,
+  DeletionReceipt,
+  DiaryMeal,
+  DiaryMeals,
+  DiaryRange,
   Food,
+  LoggedFood,
   ProbeOk,
+  ReorderResult,
   SearchResults,
+  SessionToken,
 } from "./models.js";
 
 /**
@@ -52,6 +62,17 @@ const INTEGER_FIELDS: ReadonlySet<string> = new Set([
   "limit",
   "limit_bytes",
   "measured_bytes",
+  // Diary counters (T-096 … T-105). Each is a count or an index.
+  //
+  // `entries` is a count on a day and a *array* on a meal; the walker checks
+  // arrays before it checks for a Decimal, so the array form is untouched and
+  // only the scalar one is converted.
+  "entries",
+  "entries_removed",
+  "position",
+  "use_count",
+  // Session TTL (T-126): whole seconds.
+  "ttl_seconds",
 ]);
 
 function isDecimalLike(value: unknown): value is Decimal {
@@ -100,3 +121,14 @@ export const decodeBatchReadResult = (body: JsonValue): BatchReadResult => decod
 export const decodeCapabilityCatalogue = (body: JsonValue): CapabilityCatalogue =>
   decode<CapabilityCatalogue>(body);
 export const decodeProbeOk = (body: JsonValue): ProbeOk => decode<ProbeOk>(body);
+
+export const decodeDailyNutrition = (body: JsonValue): DailyNutrition => decode<DailyNutrition>(body);
+export const decodeDiaryMeals = (body: JsonValue): DiaryMeals => decode<DiaryMeals>(body);
+export const decodeDiaryRange = (body: JsonValue): DiaryRange => decode<DiaryRange>(body);
+export const decodeDiaryMeal = (body: JsonValue): DiaryMeal => decode<DiaryMeal>(body);
+export const decodeLoggedFood = (body: JsonValue): LoggedFood => decode<LoggedFood>(body);
+export const decodeCardList = (body: JsonValue): CardList => decode<CardList>(body);
+export const decodeDeletionReceipt = (body: JsonValue): DeletionReceipt => decode<DeletionReceipt>(body);
+export const decodeReorderResult = (body: JsonValue): ReorderResult => decode<ReorderResult>(body);
+export const decodeCopyResult = (body: JsonValue): CopyResult => decode<CopyResult>(body);
+export const decodeSessionToken = (body: JsonValue): SessionToken => decode<SessionToken>(body);

@@ -190,7 +190,19 @@ export type ConfigurationErrorReason =
   | "api_key_missing"
   | "api_key_malformed"
   | "base_url_invalid"
-  | "fetch_unavailable";
+  | "fetch_unavailable"
+  // `setUser` (`src/identity.ts`). Each names one broken rule, so a caller can
+  // branch — a too-long id is a bug in their code, a non-ASCII one is a
+  // decision about how they key their users.
+  // `setSessionToken`: a token that is not one. Distinct from the API-key
+  // reasons because the fix is different — the caller has put a key where a
+  // session token goes, or the reverse.
+  | "session_token_malformed"
+  | "external_id_not_a_string"
+  | "external_id_untrimmed"
+  | "external_id_empty"
+  | "external_id_too_long"
+  | "external_id_not_ascii";
 
 /**
  * An argument the SDK refused before sending it.

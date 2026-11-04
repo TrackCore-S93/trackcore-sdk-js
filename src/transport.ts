@@ -33,6 +33,7 @@ import {
   TrackCoreAPIError,
   errorFromEnvelope,
 } from "./errors.js";
+import { EXTERNAL_ID_HEADER, SESSION_HEADER, assertValidExternalId } from "./identity.js";
 import { parseJson, type JsonValue } from "./json.js";
 import {
   DEFAULT_RETRY_POLICY,
@@ -116,9 +117,25 @@ export class Transport {
   readonly #retry: RetryPolicy;
   readonly #cache: ResponseCache | undefined;
   readonly #defaultHeaders: Record<string, string>;
+  #sessionToken: string | null = null;
   readonly #onDiagnostic: (d: Diagnostic) => void;
   readonly #sleep: (ms: number, signal?: AbortSignal) => Promise<void>;
   readonly #random: () => number;
+
+  /**
+   * The end user every request is attributed to, or `null` for none.
+   *
+   * The one piece of mutable state in this class, and it lives here rather
+   * than being threaded through `RequestOptions` on purpose. Identity is a
+   * property of the client, not of a call: if each resource method had to
+   * remember to pass it, the first method added after this one would forget,
+   * and the symptom would be a capability that silently attributes nothing —
+   * exactly the class of quiet gap this SDK exists to delete. Here, every
+   * request made by this transport carries it, including the ETag
+   * revalidations and the `/healthz` probe, because they all go through
+   * {@link Transport.request}.
+   */
+  #externalId: string | null = null;
 
   constructor(options: TransportOptions) {
     this.#baseUrl = normaliseBaseUrl(options.baseUrl);
@@ -147,6 +164,53 @@ export class Transport {
   /** The credential's public description. The key itself is not reachable. */
   describeCredential(): string {
     return this.#credential.describe();
+  }
+
+  /** The id currently sent as `X-External-Id`, or `null` when none is set. */
+  get externalId(): string | null {
+    return this.#externalId;
+  }
+
+  /**
+   * Sets or clears the end user. `null` clears.
+   *
+   * Validation lives here rather than in `TrackCore.setUser` so that it holds
+   * however the transport is reached — the class is exported, and a customer
+   * driving it directly should get the same refusal as one calling `setUser`.
+   * It throws {@link ConfigurationError}; see `src/identity.ts` for the rules
+   * and for why they are stricter than the gateway's.
+   */
+  setExternalId(externalId: string | null): void {
+    if (externalId !== null) assertValidExternalId(externalId);
+    this.#externalId = externalId;
+  }
+
+  /** The session token currently sent, or `null` when none is set. */
+  get sessionToken(): string | null {
+    return this.#sessionToken;
+  }
+
+  /**
+   * Sets or clears the end-user session token. `null` clears.
+   *
+   * On a device this is the second half of the credential: a publishable key
+   * says which customer, the token says which end user. The token is minted by
+   * the customer's own backend (`POST /v1/auth/session`, secret key) and handed
+   * to the app — a device cannot mint its own, because a device that could
+   * would be able to mint one for anybody.
+   *
+   * No validation beyond a prefix check. The token is opaque and the server is
+   * the only thing that can say whether it is live; refusing one here on a
+   * guess would be refusing a credential the server would have accepted.
+   */
+  setSessionToken(token: string | null): void {
+    if (token !== null && !token.startsWith("tc_st_")) {
+      throw new ConfigurationError(
+        "session_token_malformed",
+        "A session token starts with tc_st_. A tc_sk_ or tc_pk_ value is an API key and belongs in apiKey, not here.",
+      );
+    }
+    this.#sessionToken = token;
   }
 
   async request(options: RequestOptions): Promise<SuccessfulResponse> {
@@ -293,6 +357,16 @@ export class Transport {
       Accept: "application/json",
       Authorization: this.#credential.authorizationHeader,
     };
+    // Only when a user is set, and after the caller's own headers, so the
+    // client-wide identity is the one that wins. An absent header and a blank
+    // one are indistinguishable to the gateway — `provisionUser` reads both as
+    // `""` and provisions nobody, there is no `400` (BUG-028) — so the header
+    // is omitted entirely rather than ever sent empty, which leaves "no user"
+    // a single unambiguous spelling on the wire.
+    if (this.#externalId !== null) headers[EXTERNAL_ID_HEADER] = this.#externalId;
+    // The device half of the credential. Written here beside X-External-Id so
+    // that no resource can forget it, exactly as the external id is.
+    if (this.#sessionToken !== null) headers[SESSION_HEADER] = this.#sessionToken;
     if (cached !== undefined) headers["If-None-Match"] = cached.etag;
     if (options.idempotencyKey !== undefined) headers["Idempotency-Key"] = options.idempotencyKey;
 

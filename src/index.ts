@@ -11,6 +11,16 @@
  */
 
 export { TrackCore, DEFAULT_BASE_URL, VERSION, type TrackCoreOptions } from "./client.js";
+
+// -- end-user identity (D-012) ----------------------------------------------
+// `setUser` / `clearUser` are methods on the client; these are the pieces a
+// consumer needs to validate an id themselves — at a form boundary, say —
+// before it reaches the SDK.
+export {
+  EXTERNAL_ID_HEADER,
+  EXTERNAL_ID_MAX_CODE_POINTS,
+  assertValidExternalId,
+} from "./identity.js";
 export type { ExtractLabelOptions, LabelImage } from "./resources/label.js";
 export type { RecognizeImageOptions } from "./resources/image.js";
 export type { SearchSpeechOptions } from "./resources/nlp.js";
@@ -121,3 +131,40 @@ export { detectRuntime, type RuntimeInfo, type RuntimeKind } from "./environment
 
 // -- the lexeme-preserving parser, for anyone wrapping the API themselves ----
 export { parseJson, parseStrict, hasNativeSourceAccess, JsonParseError, type JsonObject, type JsonValue } from "./json.js";
+
+// ---------------------------------------------------------------------------
+// Diary, custom foods and sessions
+// ---------------------------------------------------------------------------
+export { SESSION_HEADER } from "./identity.js";
+export type {
+  DayParams,
+  RangeParams,
+  LogFoodParams,
+  EditPortionParams,
+  CreateMealParams,
+  EditMealParams,
+  CopyParams,
+} from "./resources/diary.js";
+export type {
+  CustomServing,
+  CreateCustomFoodParams,
+  RecipeIngredient,
+  CreateRecipeParams,
+} from "./resources/ownfoods.js";
+export type { CreateSessionParams } from "./resources/auth.js";
+export type {
+  DailyNutrition,
+  DiaryMealEntry,
+  MealFlags,
+  DiaryMeal,
+  DiaryMeals,
+  DiaryRangeDay,
+  DiaryRange,
+  LoggedFood,
+  Card,
+  CardList,
+  DeletionReceipt,
+  ReorderResult,
+  CopyResult,
+  SessionToken,
+} from "./models.js";

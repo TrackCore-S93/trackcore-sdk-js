@@ -217,6 +217,55 @@ gives you `tc_sk_live_…kM3`, which is what a dashboard shows.
 
 ---
 
+## Identifying your end users
+
+TrackCore never asks you to adopt TrackCore's idea of a user (D-012). You pass
+**your own** identifier — a Firebase UID, a row id, a ULID — and the gateway
+creates the matching record the first time it sees it, keyed to your account.
+The API only ever speaks your id back to you.
+
+```ts
+trackcore.setUser(firebaseUser.uid);   // at sign-in
+trackcore.clearUser();                 // at sign-out
+trackcore.externalId;                  // the current id, or null
+```
+
+`setUser` is synchronous and makes no network call: it stores a string, and
+every request the client makes from then on carries it as `X-External-Id` —
+the food reads, the AI capture routes, the ETag revalidations and `health()`
+alike. Before `setUser`, and after `clearUser`, the header is **not sent at
+all** rather than sent empty. The gateway reads an absent `X-External-Id` and a
+present-but-blank one identically — both mean "provision nobody" — so omitting
+it is not about avoiding an error, it is about leaving a signed-out request one
+unambiguous shape on the wire.
+
+The id is checked on the spot and a bad one throws `ConfigurationError` before
+anything is sent, with a `reason` naming the rule it broke:
+
+| `reason` | what it means |
+|---|---|
+| `external_id_untrimmed` | leading or trailing whitespace. Rejected, not trimmed: trimming would make `" u1"` and `"u1"` the same user here and two users everywhere else |
+| `external_id_empty` | the empty string. Use `clearUser()` to sign out |
+| `external_id_too_long` | over 255 **Unicode code points** — the column's limit, counted the way the server counts it, not in UTF-16 units |
+| `external_id_not_ascii` | a code point outside `U+0020`–`U+007E` |
+| `external_id_not_a_string` | something that is not a string, which TypeScript already rules out |
+
+That ASCII rule is one the server does not have, and it is deliberate. An HTTP
+header is bytes, and JavaScript gives you no say in the encoding: a code point
+above `U+00FF` makes `fetch` throw from somewhere deep in the platform, and —
+worse — one in `U+0080`–`U+00FF` **succeeds**, going out as a single Latin-1
+byte. `"café"` then arrives at the server as a different, valid-looking id,
+provisioning a second user and quietly splitting one person's history in two.
+Nothing fails; nothing logs. Refusing at the call site is the only honest
+option until the header is percent-encoded end to end.
+
+In practice it costs nothing: Firebase UIDs, UUIDs, ULIDs, integer ids and
+email addresses are all printable ASCII. If yours are not, hash them or map
+them to a UUID before passing them in. `assertValidExternalId` is exported if
+you want to apply the same check earlier, at your own form boundary.
+
+---
+
 ## Errors
 
 Every non-2xx is a typed error carrying a `code` from the closed 37-member
@@ -370,6 +419,10 @@ keystroke.
 ```
 new TrackCore({ apiKey, baseUrl?, timeoutMs?, deadlineMs?, retry?, cache?,
                 fetch?, headers?, onDiagnostic?, warn? })
+
+trackcore.setUser(externalId)                             // sends X-External-Id from now on
+trackcore.clearUser()                                     // stops sending it
+trackcore.externalId                                      // string | null, read-only
 
 trackcore.foods.search({ q, page?, pageSize?, region?, language?, signal?, revalidate? })
 trackcore.foods.get(foodId, { signal?, revalidate? })

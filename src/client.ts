@@ -11,8 +11,56 @@
 import { Credential, type Warn } from "./credentials.js";
 import { decodeCapabilityCatalogue, decodeProbeOk } from "./decode.js";
 import { ConfigurationError } from "./errors.js";
+import { assertValidExternalId } from "./identity.js";
 import { processEnv } from "./environment.js";
 import type { CapabilityCatalogue, ProbeOk } from "./models.js";
+import {
+  getDiaryDay,
+  getDiaryMeals,
+  getDiaryRange,
+  logFood,
+  editPortion,
+  deleteEntry,
+  reorderEntries,
+  createMeal,
+  editMeal,
+  deleteMeal,
+  copyMeal,
+  copyDay,
+  clearDay,
+  listFavourites,
+  addFavourite,
+  removeFavourite,
+  listRecents,
+  searchOwnFoods,
+  type DayParams,
+  type RangeParams,
+  type LogFoodParams,
+  type EditPortionParams,
+  type CreateMealParams,
+  type EditMealParams,
+  type CopyParams,
+} from "./resources/diary.js";
+import {
+  createCustomFood,
+  deleteCustomFood,
+  createRecipe,
+  type CreateCustomFoodParams,
+  type CreateRecipeParams,
+} from "./resources/ownfoods.js";
+import { createSession, type CreateSessionParams } from "./resources/auth.js";
+import type {
+  DailyNutrition,
+  DiaryMeals,
+  DiaryRange,
+  DiaryMeal,
+  LoggedFood,
+  CardList,
+  DeletionReceipt,
+  ReorderResult,
+  CopyResult,
+  SessionToken,
+} from "./models.js";
 import type { ResponseCache } from "./cache.js";
 import type { RetryPolicy } from "./retry.js";
 import {
@@ -114,6 +162,99 @@ export class TrackCore {
     });
   }
 
+  /**
+   * Attributes every **subsequent** request to one of your end users (D-012).
+   *
+   * `externalId` is your own identifier — a Firebase UID, a database id, a
+   * ULID — not a TrackCore one. The gateway creates the matching `app_user`
+   * row the first time it sees the pair `(your customer id, this id)`, so
+   * there is nothing to register in advance and nothing to await here: this
+   * stores a string and returns. Every request the client makes from now on
+   * carries it, including ETag revalidations and `health()`.
+   *
+   * ```ts
+   * trackcore.setUser(firebaseUser.uid);   // at sign-in
+   * trackcore.clearUser();                 // at sign-out
+   * ```
+   *
+   * The id is validated here, synchronously, and a bad one throws
+   * {@link ConfigurationError} with a `reason` naming the rule it broke —
+   * before any network call, so a malformed id never reaches the gateway and
+   * never creates a row. The rules are the server's (trimmed, 1–255 code
+   * points) plus printable ASCII, which the server does not require but which
+   * an HTTP header in JavaScript cannot honestly carry otherwise; the long
+   * version of that argument is at the top of `src/identity.ts`.
+   *
+   * @throws ConfigurationError with `reason` one of `external_id_not_a_string`,
+   * `external_id_untrimmed`, `external_id_empty`, `external_id_too_long` or
+   * `external_id_not_ascii`.
+   */
+  setUser(externalId: string): void {
+    // Validated here as well as in the transport, and not by delegation alone,
+    // because the two methods disagree about one value: `null` is how the
+    // transport is told to clear, so `setUser(null)` from untyped JavaScript
+    // would otherwise sign the user *out* instead of failing. Signing someone
+    // out when you asked to sign them in is the kind of bug that only shows up
+    // as missing attribution weeks later. `clearUser()` is the only way to
+    // clear.
+    assertValidExternalId(externalId);
+    this.transport.setExternalId(externalId);
+  }
+
+  /**
+   * Stops attributing requests to an end user. Call this at sign-out.
+   *
+   * The header is then omitted entirely rather than sent empty. The gateway
+   * cannot tell the two apart — it reads an absent `X-External-Id` and a blank
+   * one alike as "provision nobody" — so omitting it is what gives a
+   * signed-out request one unambiguous shape on the wire.
+   */
+  clearUser(): void {
+    this.transport.setExternalId(null);
+  }
+
+  /** The end user requests are currently attributed to, or `null`. */
+  get externalId(): string | null {
+    return this.transport.externalId;
+  }
+
+  /**
+   * Sets the end-user session token a device carries (T-126).
+   *
+   * The device half of the credential: a publishable key says which customer,
+   * this says which end user. The token comes from your own backend calling
+   * `auth.createSession` with a secret key — a device cannot mint one, by
+   * design.
+   *
+   * ```ts
+   * const trackcore = new TrackCore({ apiKey: PUBLISHABLE_KEY });
+   * trackcore.setSession(tokenFromYourBackend);
+   * await trackcore.diary.day({ date: "2026-11-04" });  // no setUser needed
+   * ```
+   *
+   * The token already says who the end user is, so `setUser` is unnecessary
+   * alongside it — and naming a *different* end user is
+   * `403 user_scope_violation`.
+   *
+   * On `401 session_expired`, fetch a fresh token from your backend and call
+   * this again. The SDK does not refresh for you: it has no way to reach your
+   * backend, and a device that could mint its own replacement would defeat the
+   * point.
+   */
+  setSession(sessionToken: string): void {
+    this.transport.setSessionToken(sessionToken);
+  }
+
+  /** Clears the session token. The client is then unscoped to any end user. */
+  clearSession(): void {
+    this.transport.setSessionToken(null);
+  }
+
+  /** The session token currently carried, or `null`. */
+  get sessionToken(): string | null {
+    return this.transport.sessionToken;
+  }
+
   readonly foods = {
     /** `GET /v1/foods/search`. See {@link searchFoods}. */
     search: (params: SearchFoodsParams): Promise<SearchResults> => searchFoods(this, params),
@@ -122,6 +263,86 @@ export class TrackCore {
     /** `GET /v1/foods?ids=…`. See {@link batchFoods}. */
     batch: (ids: readonly string[], options?: BatchFoodsOptions): Promise<BatchReadResult> =>
       batchFoods(this, ids, options),
+    /**
+     * The end user's own foods. Reached through `foods` rather than a top-level
+     * namespace because a custom food **is** a food: it comes back in the same
+     * shape, and `foods.get` resolves one (DM-F6).
+     */
+    custom: {
+      /** `POST /v1/foods/custom`. See {@link createCustomFood}. */
+      create: (params: CreateCustomFoodParams): Promise<Food> => createCustomFood(this, params),
+      /** `DELETE /v1/foods/custom/{food_id}`. See {@link deleteCustomFood}. */
+      delete: (foodId: string, options?: { signal?: AbortSignal }): Promise<DeletionReceipt> =>
+        deleteCustomFood(this, foodId, options),
+    },
+    /** `POST /v1/foods/recipes`. See {@link createRecipe}. */
+    recipes: {
+      create: (params: CreateRecipeParams): Promise<Food> => createRecipe(this, params),
+    },
+  };
+
+  /**
+   * One end user's food log.
+   *
+   * Every call needs an end user: `setUser` on a server, or `setSession` on a
+   * device. Without one the server answers `403 user_scope_violation`.
+   */
+  readonly diary = {
+    /** `GET /v1/diary/day`. See {@link getDiaryDay}. */
+    day: (params: DayParams): Promise<DailyNutrition> => getDiaryDay(this, params),
+    /** `GET /v1/diary/meals`. See {@link getDiaryMeals}. */
+    meals: (params: DayParams): Promise<DiaryMeals> => getDiaryMeals(this, params),
+    /** `GET /v1/diary/range`. See {@link getDiaryRange}. */
+    range: (params: RangeParams): Promise<DiaryRange> => getDiaryRange(this, params),
+    /** `POST /v1/diary/entries`. See {@link logFood}. */
+    log: (params: LogFoodParams): Promise<LoggedFood> => logFood(this, params),
+    /** `PATCH /v1/diary/entries/{id}`. See {@link editPortion}. */
+    editPortion: (params: EditPortionParams): Promise<LoggedFood> => editPortion(this, params),
+    /** `DELETE /v1/diary/entries/{id}`. See {@link deleteEntry}. */
+    deleteEntry: (entryId: string, options?: { signal?: AbortSignal }): Promise<DeletionReceipt> =>
+      deleteEntry(this, entryId, options),
+    /** `POST /v1/diary/entries/reorder`. See {@link reorderEntries}. */
+    reorder: (params: { mealId: string; entryIds: readonly string[]; signal?: AbortSignal }): Promise<ReorderResult> =>
+      reorderEntries(this, params),
+    /** Meals: a name plus a timestamp, not a fixed daypart. */
+    createMeal: (params: CreateMealParams): Promise<DiaryMeal> => createMeal(this, params),
+    /** `PATCH /v1/diary/meals/{id}`. See {@link editMeal}. */
+    editMeal: (params: EditMealParams): Promise<DiaryMeal> => editMeal(this, params),
+    /** `DELETE /v1/diary/meals/{id}`. See {@link deleteMeal}. */
+    deleteMeal: (mealId: string, options?: { signal?: AbortSignal }): Promise<DeletionReceipt> =>
+      deleteMeal(this, mealId, options),
+    /** `POST /v1/diary/meals/{id}/copy`. See {@link copyMeal}. */
+    copyMeal: (mealId: string, params: CopyParams & { idempotencyKey?: string }): Promise<CopyResult> =>
+      copyMeal(this, mealId, params),
+    /** `POST /v1/diary/day/copy`. See {@link copyDay}. */
+    copyDay: (params: CopyParams & { localDate: string; idempotencyKey?: string }): Promise<CopyResult> =>
+      copyDay(this, params),
+    /** `DELETE /v1/diary/day`. See {@link clearDay}. */
+    clearDay: (params: { date: string; signal?: AbortSignal }): Promise<DeletionReceipt> => clearDay(this, params),
+    /** `GET /v1/diary/favourites`. See {@link listFavourites}. */
+    favourites: (options?: { limit?: number; signal?: AbortSignal }): Promise<CardList> =>
+      listFavourites(this, options),
+    /** `POST /v1/diary/favourites/{food_id}`. See {@link addFavourite}. */
+    addFavourite: (foodId: string, options?: { signal?: AbortSignal }): Promise<unknown> =>
+      addFavourite(this, foodId, options),
+    /** `DELETE /v1/diary/favourites/{food_id}`. See {@link removeFavourite}. */
+    removeFavourite: (foodId: string, options?: { signal?: AbortSignal }): Promise<DeletionReceipt> =>
+      removeFavourite(this, foodId, options),
+    /** `GET /v1/diary/recents`. See {@link listRecents}. */
+    recents: (options?: { limit?: number; signal?: AbortSignal }): Promise<CardList> => listRecents(this, options),
+    /** `GET /v1/diary/foods/search`. The end user's own foods, not the provider's. */
+    searchOwnFoods: (params: { q: string; limit?: number; signal?: AbortSignal }): Promise<unknown> =>
+      searchOwnFoods(this, params),
+  };
+
+  /**
+   * Minting end-user session tokens. **Server-side only** — it needs a secret
+   * key, so calling it from a device both fails and would be the wrong shape if
+   * it did not.
+   */
+  readonly auth = {
+    /** `POST /v1/auth/session`. See {@link createSession}. */
+    createSession: (params: CreateSessionParams): Promise<SessionToken> => createSession(this, params),
   };
 
   readonly barcode = {

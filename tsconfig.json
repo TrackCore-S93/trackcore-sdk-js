@@ -25,5 +25,5 @@
     "resolveJsonModule": true,
     "noEmit": true
   },
-  "include": ["src/**/*.ts", "test/**/*.ts", "scripts/**/*.ts", "tsup.config.ts", "vitest.config.ts"]
+  "include": ["src/**/*.ts", "test/**/*.ts", "scripts/**/*.ts", "tsup.esm.config.ts", "tsup.cjs.config.ts", "vitest.config.ts"]
 }

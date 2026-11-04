@@ -347,3 +347,202 @@ export interface ProbeOk {
   readonly status: "ok";
   readonly version: string;
 }
+
+// ---------------------------------------------------------------------------
+// Diary (T-096 … T-105), custom foods and sessions (T-126)
+//
+// Placeholders like everything above, and replaced by T-107 the same way. The
+// field names are the spec's; `Decimal` appears wherever a nutrient value or a
+// quantity does, for the same reason it does on `Food`.
+// ---------------------------------------------------------------------------
+
+/** A nutrient total plus whether anything was left out of it. */
+export interface DailyNutrition {
+  readonly app_user: string;
+  readonly local_date: string;
+  readonly timezone: string;
+  /**
+   * How many logged foods the totals came from. Zero consumption and "no
+   * entries" produce the same numbers, and a client showing a day needs to tell
+   * them apart.
+   */
+  readonly entries: number;
+  readonly consumed: NutritionDocument;
+  /**
+   * The goal in force on that date, or `null`. Always `null` today: goals are
+   * not yet settable. Never `{}` and never back-dated (DM-D4).
+   */
+  readonly goal_snapshot: Readonly<Record<string, unknown>> | null;
+  /** Why `goal_snapshot` is null. Absent when a goal is present. */
+  readonly goal_snapshot_reason?: "no_goal_in_force";
+  /** The goal minus the consumption, or `null` when there is no goal. */
+  readonly remaining: Readonly<Record<string, unknown>> | null;
+  /**
+   * `true` when a nutrient in `consumed` had a contributing food that reported
+   * `null`, or that does not model it at all (DM-M4). The total is still the
+   * best available number; this says it is not a complete one.
+   */
+  readonly partial_sum: boolean;
+  readonly environment: "test" | "live";
+}
+
+/** A logged food as a day list renders it — no `food_snapshot`. */
+export interface DiaryMealEntry {
+  readonly entry_id: string;
+  readonly food_id: string;
+  readonly food_type: FoodType;
+  readonly name: string;
+  readonly brand: string | null;
+  readonly position: number;
+  readonly source: string;
+  readonly selected_serving_id: ServingId;
+  readonly modified_serving: Readonly<Record<string, unknown>> | null;
+  readonly serving_description: string;
+  readonly consumed_quantity: Decimal;
+  readonly nutrition: NutritionDocument;
+  readonly partial_sum: boolean;
+  readonly eaten_at: Timestamp;
+  readonly logged_at: Timestamp;
+  readonly updated_at: Timestamp;
+}
+
+/** DM-M3's flags. */
+export interface MealFlags {
+  readonly eaten: boolean;
+  readonly custom: boolean;
+  readonly treat: boolean;
+  readonly social: boolean;
+}
+
+/** A meal: a name plus a timestamp, not a fixed daypart (DM-M1). */
+export interface DiaryMeal {
+  readonly meal_id: string;
+  readonly meal_name: string;
+  readonly external_id?: string;
+  readonly eaten_at: Timestamp;
+  readonly local_date?: string;
+  readonly timezone?: string;
+  readonly flags: MealFlags;
+  /** `true` when this merged into a meal already in that minute (DM-M1). */
+  readonly merged?: boolean;
+  readonly entries?: readonly DiaryMealEntry[];
+  readonly nutrition_total?: NutritionDocument;
+  readonly partial_sum?: boolean;
+  readonly environment?: "test" | "live";
+}
+
+export interface DiaryMeals {
+  readonly app_user: string;
+  readonly local_date: string;
+  readonly timezone: string;
+  readonly meals: readonly DiaryMeal[];
+  readonly environment: "test" | "live";
+}
+
+export interface DiaryRangeDay {
+  readonly local_date: string;
+  readonly timezone: string;
+  readonly entries: number;
+  readonly consumed: NutritionDocument;
+  readonly partial_sum: boolean;
+}
+
+export interface DiaryRange {
+  readonly app_user: string;
+  readonly from: string;
+  readonly to: string;
+  /** Every day in the span, including the empty ones, zeroed (DM-D4). */
+  readonly days: readonly DiaryRangeDay[];
+  readonly environment: "test" | "live";
+}
+
+/** A logged food as a write returns it — with the whole snapshot (P-002). */
+export interface LoggedFood {
+  readonly entry_id: string;
+  readonly meal_id: string;
+  readonly meal_name: string;
+  readonly external_id: string;
+  readonly food_id: FoodId;
+  readonly food_type: FoodType;
+  readonly source: string;
+  readonly position: number;
+  readonly selected_serving_id: ServingId;
+  readonly modified_serving: Readonly<Record<string, unknown>> | null;
+  /** Never merged with `serving.base_quantity` (P-004). */
+  readonly consumed_quantity: Decimal;
+  readonly serving: Serving;
+  readonly nutrition: NutritionDocument;
+  /** The whole food, every serving, as it was when logged. */
+  readonly food_snapshot: Food;
+  readonly snapshot_state: string;
+  readonly eaten_at: Timestamp;
+  readonly local_date: string;
+  readonly timezone: string;
+  readonly logged_at: Timestamp;
+  readonly updated_at: Timestamp;
+  readonly environment: "test" | "live";
+}
+
+/**
+ * A favourite or recent, denormalised enough to render without a second
+ * request (DM-FR1).
+ */
+export interface Card {
+  readonly food_id: FoodId;
+  readonly name: string;
+  readonly brand: string | null;
+  readonly default_serving_id: ServingId;
+  readonly serving_description: string;
+  readonly nutrition: NutritionDocument | null;
+  /** Recents only. */
+  readonly last_used_at?: Timestamp;
+  readonly use_count?: number;
+  /** Favourites only. */
+  readonly favourited_at?: Timestamp;
+  /** When the card was taken. A card may be stale; a snapshot never is. */
+  readonly card_refreshed_at?: Timestamp;
+}
+
+export interface CardList {
+  readonly external_id: string;
+  readonly cards: readonly Card[];
+  readonly environment: "test" | "live";
+}
+
+export interface DeletionReceipt {
+  readonly external_id: string;
+  readonly deleted: boolean;
+  readonly entries_removed?: number;
+  readonly food_id?: string;
+  readonly environment: "test" | "live";
+}
+
+export interface ReorderResult {
+  readonly external_id: string;
+  readonly meal_id: string;
+  readonly entry_ids: readonly string[];
+  readonly environment: "test" | "live";
+}
+
+export interface CopyResult {
+  readonly external_id: string;
+  readonly meals: readonly DiaryMeal[];
+  readonly target_dates: readonly string[];
+  readonly source: { readonly meal_id?: string; readonly local_date?: string };
+  readonly environment: "test" | "live";
+}
+
+/**
+ * An end-user session token. The value appears in this response and nowhere
+ * else, ever — there is no endpoint that reads one back.
+ */
+export interface SessionToken {
+  readonly session_token: string;
+  readonly external_id: string;
+  readonly expires_at: Timestamp;
+  readonly issued_at: Timestamp;
+  readonly ttl_seconds: number;
+  readonly environment: "test" | "live";
+  /** `opaque`. Not a JWT: there is nothing in it to decode. */
+  readonly token_type: string;
+}

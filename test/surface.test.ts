@@ -119,6 +119,43 @@ describe("SDK-W4: zero runtime dependencies", () => {
   });
 });
 
+describe("D-012: the end-user header has exactly one writer", () => {
+  /**
+   * The whole point of putting `X-External-Id` in the transport is that no
+   * resource has to remember it. A second place that spells the header is a
+   * place that can forget it, send it empty, or send a different user's — and
+   * none of those three fails loudly. They fail as attribution that is simply
+   * missing or wrong, weeks later, in somebody's billing.
+   */
+  it("the header name is written once, in identity.ts", () => {
+    const named = files.filter((file) => /["']X-External-Id["']/.test(readFileSync(file, "utf8")));
+    expect(named.map((f) => f.replace(SRC, ""))).toEqual(["/identity.ts"]);
+  });
+
+  it("only the transport puts it on a request", () => {
+    const setters = files.filter((file) =>
+      /headers\[\s*EXTERNAL_ID_HEADER\s*\]\s*=/.test(readFileSync(file, "utf8")),
+    );
+    expect(setters.map((f) => f.replace(SRC, ""))).toEqual(["/transport.ts"]);
+  });
+
+  it("the barrel exports the identity surface", async () => {
+    const api = (await import("../src/index.js")) as Record<string, unknown>;
+    for (const name of ["EXTERNAL_ID_HEADER", "EXTERNAL_ID_MAX_CODE_POINTS", "assertValidExternalId"]) {
+      expect(Object.keys(api), name).toContain(name);
+    }
+  });
+
+  it("length is measured in code points, never in UTF-16 units", () => {
+    // `value.length` on an id would reject 255 astral-plane code points that
+    // Go's `utf8.RuneCountInString` accepts. The spread is the whole fix, and
+    // it is one character away from being undone by a tidy-up.
+    const source = readFileSync(join(SRC, "identity.ts"), "utf8");
+    expect(source).toContain("[...value]");
+    expect(source).not.toMatch(/\bvalue\.length\b/);
+  });
+});
+
 describe("no offline machinery (decided 2026-10-23)", () => {
   it("there is no queue, no replay and no client-side scaling", () => {
     const forbidden = /\b(offlineQueue|enqueueWrite|replayQueue|scaleServing|scaleNutrition|multiplyNutrients)\b/;
