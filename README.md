@@ -30,6 +30,19 @@ npm install && npm run build && npm run example
 
 ---
 
+## Installation
+
+The package is consumed from its git repository; it is not on the npm registry.
+
+```sh
+npm install github:TrackCore-S93/trackcore-sdk-js#main
+```
+
+Pin a release with `#v0.1.0` (a tag or commit) in place of `#main`. The
+`prepare` script builds `dist/` during the install, so nothing else is needed.
+
+---
+
 ## The most important thing in this SDK: numbers are not `number`
 
 Every nutrient value crosses the wire as a JSON **number**, deliberately.
