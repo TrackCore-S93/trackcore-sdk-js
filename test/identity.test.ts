@@ -453,7 +453,7 @@ describe("the shared cross-SDK identity contract", () => {
   }
 
   const CONTRACT = JSON.parse(
-    readFileSync(join(import.meta.dirname, "..", "..", "identity-contract.json"), "utf8"),
+    readFileSync(join(import.meta.dirname, "..", "identity-contract.json"), "utf8"),
   ) as IdentityContract;
 
   /** The slugs in one group. `$comment` keys are documentation, not values. */
