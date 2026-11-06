@@ -32,14 +32,19 @@ npm install && npm run build && npm run example
 
 ## Installation
 
-The package is consumed from its git repository; it is not on the npm registry.
+The package is not on the npm registry. Every release carries the built
+package as a tarball, and npm, Bun, pnpm and yarn all install it from the URL:
 
 ```sh
-npm install github:TrackCore-S93/trackcore-sdk-js#main
+npm install https://github.com/TrackCore-S93/trackcore-sdk-js/releases/download/v0.1.0/trackcore-sdk-0.1.0.tgz
 ```
 
-Pin a release with `#v0.1.0` (a tag or commit) in place of `#main`. The
-`prepare` script builds `dist/` during the install, so nothing else is needed.
+The releases are listed at
+https://github.com/TrackCore-S93/trackcore-sdk-js/releases; change `v0.1.0`
+(twice) to pin another one. Installing from git
+(`npm install github:TrackCore-S93/trackcore-sdk-js#main`) also works under
+npm, whose `prepare` step builds `dist/` during the install. Bun does not run
+that step, so under Bun only the tarball works.
 
 ---
 
