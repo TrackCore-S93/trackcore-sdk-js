@@ -277,6 +277,29 @@ email addresses are all printable ASCII. If yours are not, hash them or map
 them to a UUID before passing them in. `assertValidExternalId` is exported if
 you want to apply the same check earlier, at your own form boundary.
 
+### Deleting an end user
+
+When one of your users deletes their account, delete their TrackCore data too.
+This is a **server-side** call — it needs the secret key — so it belongs next
+to whatever already handles account deletion in your backend:
+
+```ts
+const receipt = await trackcore.users.delete(user.uid);
+receipt.deleted;     // { diary_entry: 1842, meal: 611, app_user: 1, health_record: 0, … }
+receipt.replayed;    // true when this id was already erased: the original receipt comes back
+```
+
+Everything TrackCore holds for that id goes in one transaction — diary entries
+and snapshots, meals, days, goals, favourites, recents, custom foods and
+recipes, sessions, health data, and the user record itself — and the receipt
+counts the rows per table. Every table in the server's erasure registry is
+listed, zero included. It is idempotent: a second call returns the original
+receipt rather than a second all-zero one. An id your account has never named
+is `404 user_not_found` (`ResourceError`), the only route that returns that
+code. The id is sent in the path, not as `X-External-Id`, so the call does not
+depend on `setUser`. This is the GDPR erasure; `diary.deleteEntry` is "I did
+not eat that" and is unrelated.
+
 ---
 
 ## Errors
@@ -442,6 +465,9 @@ trackcore.foods.get(foodId, { signal?, revalidate? })
 trackcore.foods.batch(ids, { signal?, revalidate? })      // max 100 (P-021)
 trackcore.capabilities.list({ signal? })
 trackcore.health()
+
+trackcore.auth.createSession({ externalId, ttlSeconds?, signal? })   // secret key: mint a device session token
+trackcore.users.delete(externalId, { signal? })                        // secret key: erase one end user (PF-T5)
 ```
 
 Each food method is also a standalone function taking the client first —

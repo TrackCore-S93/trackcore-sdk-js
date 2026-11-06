@@ -49,6 +49,8 @@ import {
   type CreateRecipeParams,
 } from "./resources/ownfoods.js";
 import { createSession, type CreateSessionParams } from "./resources/auth.js";
+import { eraseUser, type EraseUserOptions } from "./resources/users.js";
+import type { ErasureReceipt } from "./models.js";
 import type {
   DailyNutrition,
   DiaryMeals,
@@ -343,6 +345,18 @@ export class TrackCore {
   readonly auth = {
     /** `POST /v1/auth/session`. See {@link createSession}. */
     createSession: (params: CreateSessionParams): Promise<SessionToken> => createSession(this, params),
+  };
+
+  /**
+   * Erasing an end user. **Server-side only** — it needs a secret key. Call it
+   * from the code path that handles "delete my account": every row TrackCore
+   * holds for that person goes, and the receipt counts them per table (PF-T5).
+   * Idempotent; a repeat returns the original receipt with `replayed: true`.
+   */
+  readonly users = {
+    /** `DELETE /v1/users/{external_id}`. See {@link eraseUser}. */
+    delete: (externalId: string, options?: EraseUserOptions): Promise<ErasureReceipt> =>
+      eraseUser(this, externalId, options),
   };
 
   readonly barcode = {

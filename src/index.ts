@@ -152,6 +152,7 @@ export type {
   CreateRecipeParams,
 } from "./resources/ownfoods.js";
 export type { CreateSessionParams } from "./resources/auth.js";
+export type { EraseUserOptions } from "./resources/users.js";
 export type {
   DailyNutrition,
   DiaryMealEntry,
@@ -167,4 +168,5 @@ export type {
   ReorderResult,
   CopyResult,
   SessionToken,
+  ErasureReceipt,
 } from "./models.js";

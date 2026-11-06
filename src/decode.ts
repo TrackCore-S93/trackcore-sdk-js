@@ -43,6 +43,7 @@ import type {
   ReorderResult,
   SearchResults,
   SessionToken,
+  ErasureReceipt,
 } from "./models.js";
 
 /**
@@ -75,6 +76,15 @@ const INTEGER_FIELDS: ReadonlySet<string> = new Set([
   "ttl_seconds",
 ]);
 
+/**
+ * Objects whose **values** are all counters, keyed by something that is not a
+ * fixed field name. `ErasureReceipt.deleted` is table name to rows removed, and
+ * the key set is the server's registry, so no per-field list can name them.
+ * (`deleted` is also a boolean on `DeletionReceipt`; only the object form is
+ * walked here.)
+ */
+const INTEGER_MAPS: ReadonlySet<string> = new Set(["deleted"]);
+
 function isDecimalLike(value: unknown): value is Decimal {
   return typeof value === "object" && value !== null && "source" in value && "toInt" in value;
 }
@@ -94,8 +104,9 @@ function shape(value: JsonValue, key: string | null): unknown {
   }
   if (value !== null && typeof value === "object") {
     const out: Record<string, unknown> = {};
+    const counters = key !== null && INTEGER_MAPS.has(key);
     for (const [name, child] of Object.entries(value)) {
-      out[name] = shape(child, name);
+      out[name] = counters && isDecimalLike(child) ? child.toInt() : shape(child, name);
     }
     return out;
   }
@@ -132,3 +143,4 @@ export const decodeDeletionReceipt = (body: JsonValue): DeletionReceipt => decod
 export const decodeReorderResult = (body: JsonValue): ReorderResult => decode<ReorderResult>(body);
 export const decodeCopyResult = (body: JsonValue): CopyResult => decode<CopyResult>(body);
 export const decodeSessionToken = (body: JsonValue): SessionToken => decode<SessionToken>(body);
+export const decodeErasureReceipt = (body: JsonValue): ErasureReceipt => decode<ErasureReceipt>(body);

@@ -546,3 +546,20 @@ export interface SessionToken {
   /** `opaque`. Not a JWT: there is nothing in it to decode. */
   readonly token_type: string;
 }
+
+/**
+ * `DELETE /v1/users/{external_id}` (PF-T5). `deleted` is rows removed per
+ * table; its key set is the server's erasure registry, not a fixed list, so it
+ * grows when a table is added. `replayed` is true when this is an earlier
+ * erasure's receipt, returned because the end user no longer exists.
+ */
+export interface ErasureReceipt {
+  readonly external_id: string;
+  readonly status: "completed";
+  readonly requested_at: Timestamp;
+  readonly completed_at: Timestamp;
+  readonly deleted: Readonly<Record<string, number>>;
+  readonly replayed: boolean;
+  readonly request_id: string;
+  readonly environment: "test" | "live";
+}
