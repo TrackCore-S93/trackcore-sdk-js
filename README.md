@@ -37,11 +37,11 @@ package as a tarball, and npm, Bun, pnpm and yarn all install it from the URL
 (yarn 2 and later want the package name in front of it):
 
 ```sh
-npm install https://github.com/TrackCore-S93/trackcore-sdk-js/releases/download/v0.2.0/trackcore-sdk-0.2.0.tgz
-bun add https://github.com/TrackCore-S93/trackcore-sdk-js/releases/download/v0.2.0/trackcore-sdk-0.2.0.tgz
-pnpm add https://github.com/TrackCore-S93/trackcore-sdk-js/releases/download/v0.2.0/trackcore-sdk-0.2.0.tgz
-yarn add https://github.com/TrackCore-S93/trackcore-sdk-js/releases/download/v0.2.0/trackcore-sdk-0.2.0.tgz            # yarn 1
-yarn add @trackcore/sdk@https://github.com/TrackCore-S93/trackcore-sdk-js/releases/download/v0.2.0/trackcore-sdk-0.2.0.tgz     # yarn 2 and later
+npm install https://github.com/TrackCore-S93/trackcore-sdk-js/releases/download/v0.3.0/trackcore-sdk-0.3.0.tgz
+bun add https://github.com/TrackCore-S93/trackcore-sdk-js/releases/download/v0.3.0/trackcore-sdk-0.3.0.tgz
+pnpm add https://github.com/TrackCore-S93/trackcore-sdk-js/releases/download/v0.3.0/trackcore-sdk-0.3.0.tgz
+yarn add https://github.com/TrackCore-S93/trackcore-sdk-js/releases/download/v0.3.0/trackcore-sdk-0.3.0.tgz            # yarn 1
+yarn add @trackcore/sdk@https://github.com/TrackCore-S93/trackcore-sdk-js/releases/download/v0.3.0/trackcore-sdk-0.3.0.tgz     # yarn 2 and later
 ```
 
 The releases are listed at
@@ -286,6 +286,37 @@ In practice it costs nothing: Firebase UIDs, UUIDs, ULIDs, integer ids and
 email addresses are all printable ASCII. If yours are not, hash them or map
 them to a UUID before passing them in. `assertValidExternalId` is exported if
 you want to apply the same check earlier, at your own form boundary.
+
+### Profile, daily targets and health values
+
+```ts
+trackcore.setUser(user.id);
+
+// The nutrition profile. A PUT is a patch: absent keeps, null clears.
+await trackcore.profile.set({ sex: "female", dateOfBirth: "1990-11-12", heightCm: "170.3", goalKind: "lose", targetWeightKg: "65" });
+const profile = await trackcore.profile.get();          // age worked out; current_weight_kg from the newest weight
+
+// The daily targets are yours to set: nutrients, water and steps. From today forward only.
+await trackcore.diary.setGoal({
+  targets: { energy: { value: 2000, unit: "kcal" }, protein: { value: 120, unit: "g" } },
+  waterMl: 2000,
+  steps: 8000,
+  timezone: "Europe/London",
+});
+
+// Weight and water are health values, encrypted at rest. A manual entry is a batch of one.
+await trackcore.healthData.log({ records: [{ type: "water", value: 250, startAt: new Date().toISOString() }], timezone: "Europe/London" });
+await trackcore.healthData.log({ records: [{ type: "body_mass", value: "72.4", startAt: new Date().toISOString() }], timezone: "Europe/London" });
+
+// The day puts them side by side.
+const day = await trackcore.diary.day({ date: "2026-11-11", timezone: "Europe/London" });
+day.remaining;      // the nutrient targets minus what was eaten
+day.water;          // { recorded: 750, target: 2000, remaining: 1250, unit: "ml" }
+day.steps;          // { recorded: null, target: 8000, remaining: 8000, unit: "count" }
+day.weight_kg;      // { value: 72.4, unit: "kg", measured_on: "2026-11-11" } or null
+```
+
+`healthData` needs the `health.sync` entitlement **and** a Data Processing Agreement on file for your account, else `403 dpa_required`. It reads no device health store; a device SDK or your own code passes the values.
 
 ### Deleting an end user
 

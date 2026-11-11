@@ -1,13 +1,15 @@
 /**
  * TrackCore Web / JavaScript SDK — the public surface.
  *
- * **Server capabilities only** (D-015). There is no health sync, no voice and
- * no camera in this SDK: not as a method that throws, not as a type, not as a
- * `TODO`. Those are device capabilities and live in the Flutter and React
- * Native SDKs. A developer should learn the gap from autocomplete and the docs,
- * never from a runtime error (SDK-W1, D-004).
+ * **Server capabilities only** (D-015). There is no device health-store
+ * sync, no voice and no camera in this SDK: not as a method that
+ * throws, not as a type, not as a `TODO`. Those are device capabilities and
+ * live in the Flutter and React Native SDKs. A developer should learn the gap
+ * from autocomplete and the docs, never from a runtime error (SDK-W1, D-004).
  *
- * `test/no-native-surface.test.ts` enforces that by grepping the built surface.
+ * The health **routes** (`/v1/health/*`) are server capabilities and are here
+ * as `healthData`: they take values the app already holds and never read a
+ * device. `test/surface.test.ts` enforces the line by grepping the surface.
  */
 
 export { TrackCore, DEFAULT_BASE_URL, VERSION, type TrackCoreOptions } from "./client.js";
@@ -147,7 +149,18 @@ export type {
   CreateMealParams,
   EditMealParams,
   CopyParams,
+  SetGoalParams,
+  GoalParams,
 } from "./resources/diary.js";
+export type { ProfilePatch, ProfileReadOptions } from "./resources/profile.js";
+export type { CalculateParams } from "./resources/nutrition.js";
+export type {
+  HealthRecordInput,
+  LogHealthParams,
+  HealthRecordsParams,
+  DeleteHealthParams,
+  HealthDailyParams,
+} from "./resources/health.js";
 export type {
   CustomServing,
   CreateCustomFoodParams,
@@ -172,4 +185,24 @@ export type {
   CopyResult,
   SessionToken,
   ErasureReceipt,
+  Goal,
+  DayWeight,
+  DayCounter,
+  Sex,
+  ActivityLevel,
+  GoalKind,
+  Profile,
+  CalculateResult,
+  HealthPlatform,
+  HealthSource,
+  HealthRejectionCode,
+  HealthRejection,
+  HealthUploadResult,
+  HealthRecord,
+  HealthRecords,
+  HealthDeleteResult,
+  HealthAggregation,
+  HealthDailyValue,
+  HealthDailyDay,
+  HealthDaily,
 } from "./models.js";

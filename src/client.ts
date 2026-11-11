@@ -33,6 +33,10 @@ import {
   removeFavourite,
   listRecents,
   searchOwnFoods,
+  setGoal,
+  getGoal,
+  type SetGoalParams,
+  type GoalParams,
   type DayParams,
   type RangeParams,
   type LogFoodParams,
@@ -50,7 +54,28 @@ import {
 } from "./resources/ownfoods.js";
 import { createSession, type CreateSessionParams } from "./resources/auth.js";
 import { eraseUser, type EraseUserOptions } from "./resources/users.js";
-import type { ErasureReceipt } from "./models.js";
+import { getProfile, setProfile, type ProfilePatch, type ProfileReadOptions } from "./resources/profile.js";
+import { calculateTargets, type CalculateParams } from "./resources/nutrition.js";
+import {
+  logHealthRecords,
+  listHealthRecords,
+  deleteHealthRecords,
+  getHealthDaily,
+  type LogHealthParams,
+  type HealthRecordsParams,
+  type DeleteHealthParams,
+  type HealthDailyParams,
+} from "./resources/health.js";
+import type {
+  ErasureReceipt,
+  Goal,
+  Profile,
+  CalculateResult,
+  HealthUploadResult,
+  HealthRecords,
+  HealthDeleteResult,
+  HealthDaily,
+} from "./models.js";
 import type {
   DailyNutrition,
   DiaryMeals,
@@ -91,7 +116,7 @@ import type { JsonObject } from "./json.js";
 import type { BarcodeLookup, BatchReadResult, Food, NlpResult, SearchResults } from "./models.js";
 
 /** The SDK version, stamped into the `User-Agent`. Kept in step with package.json. */
-export const VERSION = "0.2.0";
+export const VERSION = "0.3.0";
 
 export const DEFAULT_BASE_URL = "https://api.trackcore.dev";
 
@@ -335,6 +360,50 @@ export class TrackCore {
     /** `GET /v1/diary/foods/search`. The end user's own foods, not the provider's. */
     searchOwnFoods: (params: { q: string; limit?: number; signal?: AbortSignal }): Promise<unknown> =>
       searchOwnFoods(this, params),
+    /**
+     * `PUT /v1/diary/goal`. The daily targets your app sets: nutrients, water
+     * and steps. Applies from today forward only. See {@link setGoal}.
+     */
+    setGoal: (params: SetGoalParams): Promise<Goal> => setGoal(this, params),
+    /** `GET /v1/diary/goal`. The goal as it stood on a day. See {@link getGoal}. */
+    goal: (params?: GoalParams): Promise<Goal> => getGoal(this, params),
+  };
+
+  /**
+   * The end user's nutrition profile: sex, date of birth, height, activity
+   * level, goal direction and target weight. Needs an end user, like the diary.
+   */
+  readonly profile = {
+    /** `GET /v1/profile`. Every attribute is null until given. See {@link getProfile}. */
+    get: (options?: ProfileReadOptions): Promise<Profile> => getProfile(this, options),
+    /** `PUT /v1/profile`. A patch: absent keeps, `null` clears. See {@link setProfile}. */
+    set: (patch: ProfilePatch): Promise<Profile> => setProfile(this, patch),
+  };
+
+  /**
+   * Weight, water, steps and the other health values an end user logs or
+   * syncs, encrypted at rest. Needs an end user, the `health.sync` entitlement
+   * and a Data Processing Agreement on file. This SDK reads no platform
+   * health store: pass values the app already has.
+   */
+  readonly healthData = {
+    /** `POST /v1/health/records`. A manual entry is a batch of one. See {@link logHealthRecords}. */
+    log: (params: LogHealthParams): Promise<HealthUploadResult> => logHealthRecords(this, params),
+    /** `GET /v1/health/records`. Decrypted, newest first. See {@link listHealthRecords}. */
+    records: (params?: HealthRecordsParams): Promise<HealthRecords> => listHealthRecords(this, params),
+    /** `GET /v1/health/daily`. Per-day totals over local days. See {@link getHealthDaily}. */
+    daily: (params: HealthDailyParams): Promise<HealthDaily> => getHealthDaily(this, params),
+    /** `DELETE /v1/health/records`. Bounded by type and window. See {@link deleteHealthRecords}. */
+    delete: (params: DeleteHealthParams): Promise<HealthDeleteResult> => deleteHealthRecords(this, params),
+  };
+
+  readonly nutrition = {
+    /**
+     * `POST /v1/nutrition/calculate`. BMR and TDEE from the numbers sent; the
+     * daily targets come back null and are named in `undecided_fields`. Set
+     * them with `diary.setGoal`. See {@link calculateTargets}.
+     */
+    calculate: (params: CalculateParams): Promise<CalculateResult> => calculateTargets(this, params),
   };
 
   /**

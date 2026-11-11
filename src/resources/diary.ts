@@ -1,7 +1,9 @@
-import { decodeCardList, decodeCopyResult, decodeDailyNutrition, decodeDeletionReceipt, decodeDiaryMeal, decodeDiaryMeals, decodeDiaryRange, decodeLoggedFood, decodeReorderResult } from "../decode.js";
+import { decodeCardList, decodeCopyResult, decodeDailyNutrition, decodeDeletionReceipt, decodeDiaryMeal, decodeDiaryMeals, decodeDiaryRange, decodeGoal, decodeLoggedFood, decodeReorderResult } from "../decode.js";
 import type { HasTransport } from "./foods";
+import { decimalOrNull } from "./profile.js";
 import type {
   DailyNutrition,
+  Goal,
   DiaryMeals,
   DiaryRange,
   CardList,
@@ -459,4 +461,80 @@ export async function searchOwnFoods(
     signal: params.signal,
   });
   return response.body;
+}
+
+// ---------------------------------------------------------------------------
+// Goals (0019): the daily targets the customer's app sets
+// ---------------------------------------------------------------------------
+
+export interface SetGoalParams {
+  /**
+   * The nutrient targets in the wire form: `{ energy: { value: 2200, unit:
+   * "kcal" }, protein: { value: 120, unit: "g" } }`. Every key must be a
+   * catalogue nutrient and every value a JSON number.
+   */
+  readonly targets: Readonly<Record<string, { readonly value: number | string; readonly unit?: string }>>;
+  /** IANA zone. Decides which local day "from today forward" means. Required. */
+  readonly timezone: string;
+  /** Where the numbers came from. Omitted is recorded as `user_customised`. */
+  readonly formulaVersion?: string | undefined;
+  readonly inputs?: Readonly<Record<string, unknown>> | null | undefined;
+  /** The day's water target in millilitres. Omitted or null means none in this version. */
+  readonly waterMl?: number | null | undefined;
+  /** The day's step target. Omitted or null means none in this version. */
+  readonly steps?: number | null | undefined;
+  readonly signal?: AbortSignal | undefined;
+}
+
+export interface GoalParams {
+  /** `YYYY-MM-DD`. Omitted means today in `timezone`, which is then required. */
+  readonly date?: string | undefined;
+  readonly timezone?: string | undefined;
+  readonly signal?: AbortSignal | undefined;
+}
+
+/**
+ * `PUT /v1/diary/goal` — set the end user's daily targets.
+ *
+ * **You pass the values.** TrackCore computes no calorie or macro target from
+ * a profile; it stores, versions and serves what your app sets. The effective
+ * date is today in `timezone`, computed by the server, and nothing can
+ * back-date a goal, so a past day's report never changes (DM-D1). A later
+ * version without `waterMl` or `steps` clears them from that day forward.
+ */
+export async function setGoal(client: HasTransport, params: SetGoalParams): Promise<Goal> {
+  const targets: Record<string, unknown> = {};
+  for (const [code, target] of Object.entries(params.targets)) {
+    targets[code] = { value: decimalOrNull(target.value), unit: target.unit };
+  }
+  const body: Record<string, unknown> = { targets, timezone: params.timezone };
+  if (params.formulaVersion !== undefined) body["formula_version"] = params.formulaVersion;
+  if (params.inputs !== undefined) body["inputs"] = params.inputs;
+  if (params.waterMl !== undefined) body["water_ml"] = params.waterMl;
+  if (params.steps !== undefined) body["steps"] = params.steps;
+  const response = await client.transport.request({
+    method: "PUT",
+    path: "/v1/diary/goal",
+    body,
+    signal: params.signal,
+  });
+  return decodeGoal(response.body);
+}
+
+/**
+ * `GET /v1/diary/goal` — the goal as it stood on a local date.
+ *
+ * A day before the end user ever set one is a `404 resource_not_found`
+ * (`ResourceError`): the caller asked for a goal and there is none. `day`
+ * reports the same situation as `goal_snapshot: null` with a reason, because
+ * there it is a fact about the day.
+ */
+export async function getGoal(client: HasTransport, params: GoalParams = {}): Promise<Goal> {
+  const response = await client.transport.request({
+    method: "GET",
+    path: "/v1/diary/goal",
+    query: { date: params.date, timezone: params.timezone },
+    signal: params.signal,
+  });
+  return decodeGoal(response.body);
 }

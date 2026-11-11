@@ -432,8 +432,9 @@ export interface DailyNutrition {
   readonly entries: number;
   readonly consumed: NutritionDocument;
   /**
-   * The goal in force on that date, or `null`. Always `null` today: goals are
-   * not yet settable. Never `{}` and never back-dated (DM-D4).
+   * The goal in force on that date, or `null` before any was set. Never `{}`
+   * and never back-dated (DM-D4). The targets, with `formula_version` and
+   * `effective_from` beside them.
    */
   readonly goal_snapshot: Readonly<Record<string, unknown>> | null;
   /** Why `goal_snapshot` is null. Absent when a goal is present. */
@@ -446,6 +447,12 @@ export interface DailyNutrition {
    * best available number; this says it is not a complete one.
    */
   readonly partial_sum: boolean;
+  /** The goal's water target against the water recorded that day. */
+  readonly water: DayCounter;
+  /** The goal's step target against the steps recorded that day. */
+  readonly steps: DayCounter;
+  /** The newest weight on or before the day, or null. */
+  readonly weight_kg: DayWeight | null;
   readonly environment: "test" | "live";
 }
 
@@ -624,5 +631,187 @@ export interface ErasureReceipt {
   readonly deleted: Readonly<Record<string, number>>;
   readonly replayed: boolean;
   readonly request_id: string;
+  readonly environment: "test" | "live";
+}
+
+// ---------------------------------------------------------------------------
+// Goals, the profile and health values (migration 0019, PF-T7)
+// ---------------------------------------------------------------------------
+
+/** A goal as it applies on one local day. */
+export interface Goal {
+  readonly external_id: string;
+  /** The first local day this version applies to. */
+  readonly effective_from: string;
+  readonly targets: NutritionDocument;
+  /** `user_customised`, or whatever the customer recorded. */
+  readonly formula_version: string;
+  readonly inputs: Readonly<Record<string, unknown>> | null;
+  /** The day's water target in millilitres, or null when this version set none. */
+  readonly water_ml: number | null;
+  /** The day's step target, or null when this version set none. */
+  readonly steps: number | null;
+  readonly environment: "test" | "live";
+}
+
+/** The newest weight known on a day, or null. */
+export interface DayWeight {
+  readonly value: Decimal;
+  readonly unit: "kg";
+  /** The local day of the reading, which may be earlier than the day asked about. */
+  readonly measured_on: string;
+}
+
+/** One daily target against the day's recorded total. */
+export interface DayCounter {
+  /** The day's total from the health records, or null when nothing was recorded. Null and zero are different facts. */
+  readonly recorded: Decimal | null;
+  /** The goal in force, or null when the goal set none. */
+  readonly target: number | null;
+  /** Target minus recorded, never below zero; null when there is no target. */
+  readonly remaining: Decimal | null;
+  readonly unit: "ml" | "count";
+}
+
+export type Sex = "male" | "female";
+export type ActivityLevel = "sedentary" | "light" | "moderate" | "very" | "extra";
+export type GoalKind = "lose" | "maintain" | "gain";
+
+/** The end user's nutrition profile. Every attribute is null until given. */
+export interface Profile {
+  readonly external_id: string;
+  readonly sex: Sex | null;
+  /** `YYYY-MM-DD`. */
+  readonly date_of_birth: string | null;
+  /** Whole years from the date of birth, or null without one. */
+  readonly age: number | null;
+  readonly height_cm: Decimal | null;
+  readonly activity_level: ActivityLevel | null;
+  readonly goal_kind: GoalKind | null;
+  readonly target_weight_kg: Decimal | null;
+  /**
+   * The newest `body_mass` health record. Null when none exists, and null
+   * whatever exists unless the customer holds `health.sync` and has a DPA on
+   * file: it is health data and the same two gates apply.
+   */
+  readonly current_weight_kg: DayWeight | null;
+  /** Null for an end user who has given nothing yet. */
+  readonly updated_at: Timestamp | null;
+  readonly environment: "test" | "live";
+}
+
+/** BMR and TDEE. The targets are null and named in `undecided_fields`. */
+export interface CalculateResult {
+  readonly bmr: { readonly value: Decimal; readonly unit: "kcal" };
+  readonly tdee: { readonly value: Decimal; readonly unit: "kcal" };
+  readonly energy: { readonly value: null; readonly unit: "kcal" };
+  readonly protein: { readonly value: null; readonly unit: "g" };
+  readonly carbohydrate: { readonly value: null; readonly unit: "g"; readonly basis?: "total" };
+  readonly fat: { readonly value: null; readonly unit: "g" };
+  readonly estimated_days_to_goal: number | null;
+  readonly formula_version: string;
+  readonly activity_multiplier: Decimal;
+  readonly undecided_fields: readonly string[];
+  readonly environment: "test" | "live";
+}
+
+export type HealthPlatform = "app" | "healthkit" | "health_connect";
+
+/** Where a synced value came from, as the platform reports it. */
+export interface HealthSource {
+  readonly native_type?: string | null;
+  readonly device?: string | null;
+  readonly source_app?: string | null;
+}
+
+export type HealthRejectionCode =
+  | "unknown_type"
+  | "unsupported_type"
+  | "wrong_unit"
+  | "out_of_range"
+  | "invalid_value"
+  | "invalid_time"
+  | "invalid_timezone";
+
+/** One record of a batch that was not stored, by its index in `records[]`. */
+export interface HealthRejection {
+  readonly index: number;
+  readonly code: HealthRejectionCode;
+  readonly parameter?: string;
+}
+
+/** The counts of one `POST /v1/health/records`. */
+export interface HealthUploadResult {
+  readonly external_id: string;
+  readonly accepted: number;
+  readonly duplicates_ignored: number;
+  readonly rejected: number;
+  readonly rejections: readonly HealthRejection[];
+  /** Per type, the newest `start_at` accepted in this batch. */
+  readonly sync_cursor: Readonly<Record<string, string>>;
+  /** True when this is an earlier batch's answer, for a repeated `Idempotency-Key`. */
+  readonly replayed: boolean;
+  readonly environment: "test" | "live";
+}
+
+/** One stored value, decrypted. */
+export interface HealthRecord {
+  readonly type: string;
+  readonly record_id: string;
+  readonly start_at: Timestamp;
+  readonly end_at: Timestamp | null;
+  readonly local_date: string;
+  readonly timezone: string;
+  readonly value: Decimal;
+  readonly unit: string;
+  readonly source: {
+    readonly platform: HealthPlatform;
+    readonly native_type: string | null;
+    readonly device: string | null;
+    readonly source_app: string | null;
+  };
+  readonly is_user_entered: boolean;
+  readonly recorded_at: Timestamp | null;
+}
+
+export interface HealthRecords {
+  readonly external_id: string;
+  readonly from: Timestamp;
+  readonly to: Timestamp;
+  readonly records: readonly HealthRecord[];
+  readonly environment: "test" | "live";
+}
+
+export interface HealthDeleteResult {
+  readonly external_id: string;
+  readonly deleted: number;
+  readonly days_recomputed: number;
+  readonly environment: "test" | "live";
+}
+
+export type HealthAggregation = "sum" | "avg" | "min" | "max" | "latest" | "session_sum";
+
+/** One day's value for one type. */
+export interface HealthDailyValue {
+  readonly value: Decimal;
+  readonly unit: string;
+  readonly records: number;
+  /** How many distinct sources contributed. Above one, the multi-source rule applied. */
+  readonly sources: number;
+  readonly aggregation: HealthAggregation;
+}
+
+export interface HealthDailyDay {
+  readonly local_date: string;
+  /** Keyed by type code. */
+  readonly values: Readonly<Record<string, HealthDailyValue>>;
+}
+
+/** Per-day totals. Only days with data are listed. */
+export interface HealthDaily {
+  readonly external_id: string;
+  readonly from: string;
+  readonly to: string;
+  readonly days: readonly HealthDailyDay[];
   readonly environment: "test" | "live";
 }

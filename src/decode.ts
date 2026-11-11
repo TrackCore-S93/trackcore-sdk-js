@@ -29,6 +29,13 @@ import type { JsonValue } from "./json.js";
 import type {
   BarcodeLookup,
   BatchReadResult,
+  CalculateResult,
+  Goal,
+  HealthDaily,
+  HealthDeleteResult,
+  HealthRecords,
+  HealthUploadResult,
+  Profile,
   CapabilityCatalogue,
   CardList,
   CopyResult,
@@ -75,6 +82,24 @@ const INTEGER_FIELDS: ReadonlySet<string> = new Set([
   "use_count",
   // Session TTL (T-126): whole seconds.
   "ttl_seconds",
+  // Goals, the profile and health values (0019). `steps` is a counter on a
+  // goal and an object on a day; `records` is a count on a daily value and
+  // an array on a records page; `deleted` is a count on a health delete, a
+  // boolean on a deletion receipt and a map on an erasure. Only the scalar
+  // Decimal form of each is converted.
+  "age",
+  "water_ml",
+  "steps",
+  "target",
+  "accepted",
+  "duplicates_ignored",
+  "rejected",
+  "index",
+  "records",
+  "sources",
+  "deleted",
+  "days_recomputed",
+  "estimated_days_to_goal",
 ]);
 
 /**
@@ -146,3 +171,10 @@ export const decodeReorderResult = (body: JsonValue): ReorderResult => decode<Re
 export const decodeCopyResult = (body: JsonValue): CopyResult => decode<CopyResult>(body);
 export const decodeSessionToken = (body: JsonValue): SessionToken => decode<SessionToken>(body);
 export const decodeErasureReceipt = (body: JsonValue): ErasureReceipt => decode<ErasureReceipt>(body);
+export const decodeGoal = (body: JsonValue): Goal => decode<Goal>(body);
+export const decodeProfile = (body: JsonValue): Profile => decode<Profile>(body);
+export const decodeCalculateResult = (body: JsonValue): CalculateResult => decode<CalculateResult>(body);
+export const decodeHealthUploadResult = (body: JsonValue): HealthUploadResult => decode<HealthUploadResult>(body);
+export const decodeHealthRecords = (body: JsonValue): HealthRecords => decode<HealthRecords>(body);
+export const decodeHealthDeleteResult = (body: JsonValue): HealthDeleteResult => decode<HealthDeleteResult>(body);
+export const decodeHealthDaily = (body: JsonValue): HealthDaily => decode<HealthDaily>(body);

@@ -53,9 +53,10 @@ describe("SDK-W1: no device capability exists in this SDK", () => {
     const names = Object.keys(api);
     expect(names).toContain("lookupBarcode");
     const joined = names.join(" ").toLowerCase();
-    for (const word of ["health", "voice", "camera", "scanner", "microphone"]) {
-      // `TrackCore.health()` is `GET /healthz`, a liveness probe, and is a
-      // method rather than an export — so the barrel itself must be clean.
+    for (const word of ["healthkit", "healthconnect", "healthsync", "voice", "camera", "scanner", "microphone"]) {
+      // The health ROUTES are server capabilities and are exported
+      // (`logHealthRecords` sends values the app already holds); the device
+      // SYNC that reads the platform's health store is not, and must not be.
       expect(joined, word).not.toContain(word);
     }
     // Server-side lookup is the one barcode export. A camera or a scanner
