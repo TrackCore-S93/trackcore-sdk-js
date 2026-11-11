@@ -149,6 +149,12 @@ describe("health values", () => {
     expect(result.rejections[0]?.code).toBe("out_of_range");
   });
 
+  it("logs a value with no time, which the server stamps as now", async () => {
+    const { client, sent } = server(UPLOAD);
+    await client.healthData.log({ records: [{ type: "water", value: 250 }] });
+    expect(sent[0]!.body).toBe('{"platform":"app","records":[{"type":"water","value":250}]}');
+  });
+
   it("reads records back with a Decimal value and a counted window", async () => {
     const { client, sent } = server(
       '{"external_id":"user_123","from":"2026-10-12T00:00:00Z","to":"2026-11-11T10:00:00Z","records":[' +

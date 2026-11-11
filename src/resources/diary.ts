@@ -118,8 +118,10 @@ export interface LogFoodParams {
    * merging the two is how `grounds` arrived at silent zero nutrition (P-004).
    */
   readonly consumedQuantity: number | string;
-  readonly eatenAt: string;
-  readonly localDate: string;
+  /** RFC 3339, when the food was eaten. Omitted means now. */
+  readonly eatenAt?: string | undefined;
+  /** `YYYY-MM-DD` in `timezone`. Omitted is derived from `eatenAt`. */
+  readonly localDate?: string | undefined;
   readonly timezone: string;
   readonly mealName?: string | undefined;
   readonly mealId?: string | undefined;
@@ -220,8 +222,10 @@ export async function reorderEntries(
 
 export interface CreateMealParams {
   readonly mealName: string;
-  readonly eatenAt: string;
-  readonly localDate: string;
+  /** RFC 3339, when the meal was eaten. Omitted means now. */
+  readonly eatenAt?: string | undefined;
+  /** `YYYY-MM-DD` in `timezone`. Omitted is derived from `eatenAt`. */
+  readonly localDate?: string | undefined;
   readonly timezone: string;
   readonly flags?: {
     readonly eaten?: boolean;

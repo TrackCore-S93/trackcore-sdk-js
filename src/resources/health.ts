@@ -22,8 +22,8 @@ import { decimalOrNull } from "./profile.js";
  *
  * # A manual entry is a batch of one
  *
- * `log([{ type: "water", value: 250, startAt: now }])` with the default
- * `platform: "app"`. The unit defaults to the type's canonical one (`ml`,
+ * `log({ records: [{ type: "water", value: 250 }] })` with the default
+ * `platform: "app"` and, with no `startAt`, the moment it was sent. The unit defaults to the type's canonical one (`ml`,
  * `kg`, `count`, `bpm`), and another unit is refused rather than converted.
  */
 export interface HealthRecordInput {
@@ -33,8 +33,8 @@ export interface HealthRecordInput {
   readonly value: string | number;
   /** The type's canonical unit. Omitted means that unit. */
   readonly unit?: string | undefined;
-  /** RFC 3339. */
-  readonly startAt: string;
+  /** RFC 3339, when the value was measured or consumed. Omitted means now. */
+  readonly startAt?: string | undefined;
   readonly endAt?: string | null | undefined;
   /** IANA zone deciding the record's local day. Omitted means the batch's. */
   readonly timezone?: string | undefined;
@@ -88,8 +88,8 @@ export async function logHealthRecords(client: HasTransport, params: LogHealthPa
     const out: Record<string, unknown> = {
       type: record.type,
       value: decimalOrNull(record.value),
-      start_at: record.startAt,
     };
+    if (record.startAt !== undefined) out["start_at"] = record.startAt;
     if (record.unit !== undefined) out["unit"] = record.unit;
     if (record.endAt !== undefined) out["end_at"] = record.endAt;
     if (record.timezone !== undefined) out["timezone"] = record.timezone;

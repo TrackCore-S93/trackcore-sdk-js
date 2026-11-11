@@ -37,11 +37,11 @@ package as a tarball, and npm, Bun, pnpm and yarn all install it from the URL
 (yarn 2 and later want the package name in front of it):
 
 ```sh
-npm install https://github.com/TrackCore-S93/trackcore-sdk-js/releases/download/v0.3.0/trackcore-sdk-0.3.0.tgz
-bun add https://github.com/TrackCore-S93/trackcore-sdk-js/releases/download/v0.3.0/trackcore-sdk-0.3.0.tgz
-pnpm add https://github.com/TrackCore-S93/trackcore-sdk-js/releases/download/v0.3.0/trackcore-sdk-0.3.0.tgz
-yarn add https://github.com/TrackCore-S93/trackcore-sdk-js/releases/download/v0.3.0/trackcore-sdk-0.3.0.tgz            # yarn 1
-yarn add @trackcore/sdk@https://github.com/TrackCore-S93/trackcore-sdk-js/releases/download/v0.3.0/trackcore-sdk-0.3.0.tgz     # yarn 2 and later
+npm install https://github.com/TrackCore-S93/trackcore-sdk-js/releases/download/v0.3.1/trackcore-sdk-0.3.1.tgz
+bun add https://github.com/TrackCore-S93/trackcore-sdk-js/releases/download/v0.3.1/trackcore-sdk-0.3.1.tgz
+pnpm add https://github.com/TrackCore-S93/trackcore-sdk-js/releases/download/v0.3.1/trackcore-sdk-0.3.1.tgz
+yarn add https://github.com/TrackCore-S93/trackcore-sdk-js/releases/download/v0.3.1/trackcore-sdk-0.3.1.tgz            # yarn 1
+yarn add @trackcore/sdk@https://github.com/TrackCore-S93/trackcore-sdk-js/releases/download/v0.3.1/trackcore-sdk-0.3.1.tgz     # yarn 2 and later
 ```
 
 The releases are listed at
@@ -305,8 +305,8 @@ await trackcore.diary.setGoal({
 });
 
 // Weight and water are health values, encrypted at rest. A manual entry is a batch of one.
-await trackcore.healthData.log({ records: [{ type: "water", value: 250, startAt: new Date().toISOString() }], timezone: "Europe/London" });
-await trackcore.healthData.log({ records: [{ type: "body_mass", value: "72.4", startAt: new Date().toISOString() }], timezone: "Europe/London" });
+await trackcore.healthData.log({ records: [{ type: "water", value: 250 }], timezone: "Europe/London" });          // now
+await trackcore.healthData.log({ records: [{ type: "body_mass", value: "72.4", startAt: "2026-11-11T07:00:00Z" }], timezone: "Europe/London" });
 
 // The day puts them side by side.
 const day = await trackcore.diary.day({ date: "2026-11-11", timezone: "Europe/London" });
