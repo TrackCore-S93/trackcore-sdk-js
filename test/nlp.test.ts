@@ -12,7 +12,10 @@ import type { FetchLike } from "../src/transport.js";
 const SECRET = `tc_sk_live_${"7kQ2mF4xT9bR3vN8pL5wC1yH6zJ0dG7sA4eU2iO9kM3"}`;
 
 const RESULT =
-  '{"text":"chicken salad","query":"chicken salad","search_type":"keyword","page":0,"page_size":10,"page_size_clamped":false,"total_results":1,"has_more":false,"results":[{"servings":[{"nutrition":{"energy":{"value":138.000}}}]}]}';
+  '{"text":"chicken salad","items":[{"phrase":"chicken salad","quantity":1.5,"unit":"cup","status":"matched","food":{"food_id":"tc_food_1","servings":[{"serving_id":"fs:1:1","nutrition":{"energy":{"value":138.000}}}]},"serving_id":"fs:1:1","consumed_quantity":1.5,"consumed_nutrition":{"energy":{"value":207.000,"unit":"kcal"},"vitamin_d":null}},{"phrase":"zorblax","quantity":null,"unit":null,"status":"no_match","food":null,"serving_id":null,"consumed_quantity":null,"consumed_nutrition":null}],"query":"chicken salad","search_type":"keyword","page":0,"page_size":10,"page_size_clamped":false,"total_results":1,"has_more":false,"results":[{"servings":[{"nutrition":{"energy":{"value":138.000}}}]}]}';
+
+const OLD_RESULT =
+  '{"text":"chicken salad","query":"chicken salad","search_type":"keyword","page":0,"page_size":10,"page_size_clamped":false,"total_results":1,"has_more":false,"results":[]}';
 
 describe("nlp", () => {
   it("posts the transcript and keeps 138.000", async () => {
@@ -31,10 +34,40 @@ describe("nlp", () => {
     const result = await client.nlp.search("chicken salad");
     expect(url).toContain("/v1/nlp");
     expect(sent).toBe('{"text":"chicken salad"}');
-    expect(result["page_size"]).toEqual(new Decimal("10"));
-    const rows = result["results"] as unknown as { servings: { nutrition: { energy: { value: Decimal } } }[] }[];
-    const energy = rows[0]?.servings[0]?.nutrition.energy.value;
-    expect(energy).toEqual(new Decimal("138.000"));
+    // Counters are numbers, nutrients and quantities are Decimal with their scale.
+    expect(result.page_size).toBe(10);
+    expect(result.results[0]?.servings[0]?.nutrition["energy"]?.value).toEqual(new Decimal("138.000"));
+
+    expect(result.items).toHaveLength(2);
+    const matched = result.items[0]!;
+    expect(matched.status).toBe("matched");
+    expect(matched.quantity).toEqual(new Decimal("1.5"));
+    expect(matched.unit).toBe("cup");
+    expect(matched.serving_id).toBe("fs:1:1");
+    expect(matched.consumed_quantity).toEqual(new Decimal("1.5"));
+    expect(matched.consumed_nutrition?.["energy"]?.value).toEqual(new Decimal("207.000"));
+    // null is kept apart from absent and from zero, in the scaled document too.
+    expect(matched.consumed_nutrition?.["vitamin_d"]).toBeNull();
+
+    const miss = result.items[1]!;
+    expect(miss.status).toBe("no_match");
+    expect(miss.phrase).toBe("zorblax");
+    expect(miss.food).toBeNull();
+    expect(miss.quantity).toBeNull();
+    expect(miss.consumed_nutrition).toBeNull();
+  });
+
+  it("reads a response from before itemisation as empty items", async () => {
+    const fetchImpl: FetchLike = async () =>
+      ({
+        status: 200,
+        headers: new Headers({ "Content-Type": "application/json" }),
+        text: async () => OLD_RESULT,
+      }) as unknown as Response;
+    const client = new TrackCore({ apiKey: SECRET, fetch: fetchImpl });
+    const result = await client.nlp.search("chicken salad");
+    expect(result.items).toEqual([]);
+    expect(result.text).toBe("chicken salad");
   });
 
   it("posts a recording as audio", async () => {

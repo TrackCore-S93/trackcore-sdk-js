@@ -348,6 +348,69 @@ export interface ProbeOk {
   readonly version: string;
 }
 
+/**
+ * How one spoken item was resolved (`POST /v1/nlp`).
+ *
+ * `matched`: the spoken quantity and unit named one of the food's servings,
+ * or a measure it could be scaled to. `default_serving`: the food was found
+ * and nothing usable was spoken, so the default serving and a quantity of 1
+ * stand in. `no_serving`: the food publishes no serving to log. `no_match`:
+ * the catalogue has nothing for the phrase.
+ */
+export type NlpItemStatus = "matched" | "default_serving" | "no_serving" | "no_match";
+
+/**
+ * One food a sentence named, resolved against the catalogue.
+ *
+ * `phrase`, `quantity` and `unit` are what was said, as the language model
+ * read them. Everything else is the catalogue's and the serving arithmetic's:
+ * the model never produces a nutrient, and `consumed_nutrition` is the same
+ * figure the diary will store when the item is logged.
+ */
+export interface NlpItem {
+  /** The user's words for this food, as spoken. */
+  readonly phrase: string;
+  /** How many, when a number was said; `null` when none was. */
+  readonly quantity: Decimal | null;
+  /** The measure, lower-cased, when one was said: `g`, `ml`, `oz`, `cup`, `slice`, …; `null` when none was. */
+  readonly unit: string | null;
+  readonly status: NlpItemStatus;
+  /** The catalogue's top match. `null` on `no_match`. */
+  readonly food: Food | null;
+  /** The serving chosen, one of `food.servings[].serving_id`. `null` unless a serving was chosen. */
+  readonly serving_id: ServingId | null;
+  /**
+   * How many of the chosen serving, in the diary's convention: what
+   * `diary.log` takes as `consumedQuantity`. On a metric serving it is the
+   * amount in that unit, so "150 g" of a per-100 g serving is `150`.
+   */
+  readonly consumed_quantity: Decimal | null;
+  /** The nutrition for `consumed_quantity` of the chosen serving, computed on the server. */
+  readonly consumed_nutrition: NutritionDocument | null;
+}
+
+/**
+ * `POST /v1/nlp`: one sentence about food, resolved.
+ *
+ * `items` is the sentence split and resolved, in the order spoken. `results`
+ * is the matched foods, each once, in item order; when the gateway could not
+ * split the sentence it is one ten-food search of the whole text and `items`
+ * is empty.
+ */
+export interface NlpResult {
+  /** The transcript after trimming. Empty when nothing was said. */
+  readonly text: string;
+  readonly items: readonly NlpItem[];
+  readonly query: string;
+  readonly search_type: "keyword";
+  readonly page: number;
+  readonly page_size: number;
+  readonly page_size_clamped: boolean;
+  readonly total_results: number | null;
+  readonly has_more: boolean;
+  readonly results: readonly Food[];
+}
+
 // ---------------------------------------------------------------------------
 // Diary (T-096 … T-105), custom foods and sessions (T-126)
 //

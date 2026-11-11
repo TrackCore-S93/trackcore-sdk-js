@@ -39,6 +39,7 @@ import type {
   DiaryRange,
   Food,
   LoggedFood,
+  NlpResult,
   ProbeOk,
   ReorderResult,
   SearchResults,
@@ -128,6 +129,7 @@ function decode<T>(body: JsonValue): T {
 export const decodeFood = (body: JsonValue): Food => decode<Food>(body);
 export const decodeBarcodeLookup = (body: JsonValue): BarcodeLookup => decode<BarcodeLookup>(body);
 export const decodeSearchResults = (body: JsonValue): SearchResults => decode<SearchResults>(body);
+export const decodeNlpResult = (body: JsonValue): NlpResult => decode<NlpResult>(body);
 export const decodeBatchReadResult = (body: JsonValue): BatchReadResult => decode<BatchReadResult>(body);
 export const decodeCapabilityCatalogue = (body: JsonValue): CapabilityCatalogue =>
   decode<CapabilityCatalogue>(body);

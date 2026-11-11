@@ -37,15 +37,15 @@ package as a tarball, and npm, Bun, pnpm and yarn all install it from the URL
 (yarn 2 and later want the package name in front of it):
 
 ```sh
-npm install https://github.com/TrackCore-S93/trackcore-sdk-js/releases/download/v0.1.0/trackcore-sdk-0.1.0.tgz
-bun add https://github.com/TrackCore-S93/trackcore-sdk-js/releases/download/v0.1.0/trackcore-sdk-0.1.0.tgz
-pnpm add https://github.com/TrackCore-S93/trackcore-sdk-js/releases/download/v0.1.0/trackcore-sdk-0.1.0.tgz
-yarn add https://github.com/TrackCore-S93/trackcore-sdk-js/releases/download/v0.1.0/trackcore-sdk-0.1.0.tgz            # yarn 1
-yarn add @trackcore/sdk@https://github.com/TrackCore-S93/trackcore-sdk-js/releases/download/v0.1.0/trackcore-sdk-0.1.0.tgz     # yarn 2 and later
+npm install https://github.com/TrackCore-S93/trackcore-sdk-js/releases/download/v0.2.0/trackcore-sdk-0.2.0.tgz
+bun add https://github.com/TrackCore-S93/trackcore-sdk-js/releases/download/v0.2.0/trackcore-sdk-0.2.0.tgz
+pnpm add https://github.com/TrackCore-S93/trackcore-sdk-js/releases/download/v0.2.0/trackcore-sdk-0.2.0.tgz
+yarn add https://github.com/TrackCore-S93/trackcore-sdk-js/releases/download/v0.2.0/trackcore-sdk-0.2.0.tgz            # yarn 1
+yarn add @trackcore/sdk@https://github.com/TrackCore-S93/trackcore-sdk-js/releases/download/v0.2.0/trackcore-sdk-0.2.0.tgz     # yarn 2 and later
 ```
 
 The releases are listed at
-https://github.com/TrackCore-S93/trackcore-sdk-js/releases; change `v0.1.0`
+https://github.com/TrackCore-S93/trackcore-sdk-js/releases; change `v0.2.0`
 (twice) to pin another one. Installing from git
 (`npm install github:TrackCore-S93/trackcore-sdk-js#main`) also works under
 npm, whose `prepare` step builds `dist/` during the install. Bun does not run
