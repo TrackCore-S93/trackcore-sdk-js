@@ -109,7 +109,11 @@ export async function getDiaryRange(client: HasTransport, params: RangeParams): 
 }
 
 export interface LogFoodParams {
-  readonly externalId: string;
+  /**
+   * Not needed: the end user is the one set on the client with `setUser` or
+   * `setSession`. Accepted for compatibility; if given it must match.
+   */
+  readonly externalId?: string | undefined;
   readonly foodId: string;
   readonly selectedServingId: string;
   /**
@@ -143,7 +147,7 @@ export async function logFood(client: HasTransport, params: LogFoodParams): Prom
     method: "POST",
     path: "/v1/diary/entries",
     body: {
-      external_id: params.externalId,
+      ...(params.externalId === undefined ? {} : { external_id: params.externalId }),
       food_id: params.foodId,
       selected_serving_id: params.selectedServingId,
       consumed_quantity: params.consumedQuantity,
