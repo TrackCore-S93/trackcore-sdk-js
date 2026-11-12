@@ -37,7 +37,7 @@ package as a tarball, and npm, Bun, pnpm and yarn all install it from the URL
 (yarn 2 and later want the package name in front of it):
 
 ```sh
-npm install https://github.com/TrackCore-S93/trackcore-sdk-js/releases/download/v0.3.1/trackcore-sdk-0.3.1.tgz
+npm install https://github.com/TrackCore-S93/trackcore-sdk-js/releases/download/v0.3.2/trackcore-sdk-0.3.2.tgz
 bun add https://github.com/TrackCore-S93/trackcore-sdk-js/releases/download/v0.3.1/trackcore-sdk-0.3.1.tgz
 pnpm add https://github.com/TrackCore-S93/trackcore-sdk-js/releases/download/v0.3.1/trackcore-sdk-0.3.1.tgz
 yarn add https://github.com/TrackCore-S93/trackcore-sdk-js/releases/download/v0.3.1/trackcore-sdk-0.3.1.tgz            # yarn 1
@@ -296,11 +296,11 @@ trackcore.setUser(user.id);
 await trackcore.profile.set({ sex: "female", dateOfBirth: "1990-11-12", heightCm: "170.3", goalKind: "lose", targetWeightKg: "65" });
 const profile = await trackcore.profile.get();          // age worked out; current_weight_kg from the newest weight
 
-// The daily targets are yours to set: nutrients, water and steps. From today forward only.
-await trackcore.diary.setGoal({
-  targets: { energy: { value: 2000, unit: "kcal" }, protein: { value: 120, unit: "g" } },
-  waterMl: 2000,
-  steps: 8000,
+// The daily targets are yours to set, one at a time or together: each call is a patch.
+await trackcore.diary.setGoal({ waterMl: 2000, timezone: "Europe/London" });   // the water goal alone
+await trackcore.diary.setGoal({ steps: 8000, timezone: "Europe/London" });     // the step goal alone
+await trackcore.diary.setGoal({                                                // the macros, as a set
+  targets: { energy: { value: 2000, unit: "kcal" }, protein: { value: 120, unit: "g" }, carbohydrate: { value: 250, unit: "g" }, fat: { value: 70, unit: "g" } },
   timezone: "Europe/London",
 });
 

@@ -475,17 +475,18 @@ export interface SetGoalParams {
   /**
    * The nutrient targets in the wire form: `{ energy: { value: 2200, unit:
    * "kcal" }, protein: { value: 120, unit: "g" } }`. Every key must be a
-   * catalogue nutrient and every value a JSON number.
+   * catalogue nutrient and every value a JSON number. Replaced as a set when
+   * given; omitted keeps the targets in force; `null` clears them.
    */
-  readonly targets: Readonly<Record<string, { readonly value: number | string; readonly unit?: string }>>;
+  readonly targets?: Readonly<Record<string, { readonly value: number | string; readonly unit?: string }>> | null | undefined;
   /** IANA zone. Decides which local day "from today forward" means. Required. */
   readonly timezone: string;
   /** Where the numbers came from. Omitted is recorded as `user_customised`. */
   readonly formulaVersion?: string | undefined;
   readonly inputs?: Readonly<Record<string, unknown>> | null | undefined;
-  /** The day's water target in millilitres. Omitted or null means none in this version. */
+  /** The day's water target in millilitres. Omitted keeps the one in force; `null` clears it. */
   readonly waterMl?: number | null | undefined;
-  /** The day's step target. Omitted or null means none in this version. */
+  /** The day's step target. Omitted keeps the one in force; `null` clears it. */
   readonly steps?: number | null | undefined;
   readonly signal?: AbortSignal | undefined;
 }
@@ -501,17 +502,24 @@ export interface GoalParams {
  * `PUT /v1/diary/goal` — set the end user's daily targets.
  *
  * **You pass the values.** TrackCore computes no calorie or macro target from
- * a profile; it stores, versions and serves what your app sets. The effective
- * date is today in `timezone`, computed by the server, and nothing can
- * back-date a goal, so a past day's report never changes (DM-D1). A later
- * version without `waterMl` or `steps` clears them from that day forward.
+ * a profile; it stores, versions and serves what your app sets. **A patch**:
+ * `setGoal({ waterMl: 2000, timezone })` changes the water goal and nothing
+ * else; a field left out is kept, `null` clears it. `targets` is replaced as
+ * a set when given. The effective date is today in `timezone`, computed by
+ * the server, and nothing can back-date a goal, so a past day's report never
+ * changes (DM-D1).
  */
 export async function setGoal(client: HasTransport, params: SetGoalParams): Promise<Goal> {
-  const targets: Record<string, unknown> = {};
-  for (const [code, target] of Object.entries(params.targets)) {
-    targets[code] = { value: decimalOrNull(target.value), unit: target.unit };
+  const body: Record<string, unknown> = { timezone: params.timezone };
+  if (params.targets === null) {
+    body["targets"] = null;
+  } else if (params.targets !== undefined) {
+    const targets: Record<string, unknown> = {};
+    for (const [code, target] of Object.entries(params.targets)) {
+      targets[code] = { value: decimalOrNull(target.value), unit: target.unit };
+    }
+    body["targets"] = targets;
   }
-  const body: Record<string, unknown> = { targets, timezone: params.timezone };
   if (params.formulaVersion !== undefined) body["formula_version"] = params.formulaVersion;
   if (params.inputs !== undefined) body["inputs"] = params.inputs;
   if (params.waterMl !== undefined) body["water_ml"] = params.waterMl;

@@ -91,11 +91,20 @@ describe("goals", () => {
     });
     expect(sent[0]!.method).toBe("PUT");
     expect(sent[0]!.body).toBe(
-      '{"targets":{"energy":{"value":2200,"unit":"kcal"},"protein":{"value":120.5,"unit":"g"}},"timezone":"Europe/London","water_ml":2000,"steps":8000}',
+      '{"timezone":"Europe/London","targets":{"energy":{"value":2200,"unit":"kcal"},"protein":{"value":120.5,"unit":"g"}},"water_ml":2000,"steps":8000}',
     );
     expect(goal.water_ml).toBe(2000);
     expect(goal.steps).toBe(8000);
     expect(goal.targets["protein"]?.value).toEqual(new Decimal("120.5"));
+  });
+
+  it("sets the water goal alone, sending nothing else", async () => {
+    const { client, sent } = server(GOAL);
+    await client.diary.setGoal({ waterMl: 2000, timezone: "Europe/London" });
+    expect(sent[0]!.body).toBe('{"timezone":"Europe/London","water_ml":2000}');
+    const { client: c2, sent: s2 } = server(GOAL);
+    await c2.diary.setGoal({ steps: null, timezone: "Europe/London" });
+    expect(s2[0]!.body).toBe('{"timezone":"Europe/London","steps":null}');
   });
 
   it("reads the goal as it stood on a day", async () => {
