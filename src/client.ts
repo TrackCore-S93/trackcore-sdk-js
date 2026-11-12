@@ -116,7 +116,7 @@ import type { JsonObject } from "./json.js";
 import type { BarcodeLookup, BatchReadResult, Food, NlpResult, SearchResults } from "./models.js";
 
 /** The SDK version, stamped into the `User-Agent`. Kept in step with package.json. */
-export const VERSION = "0.4.0";
+export const VERSION = "0.4.1";
 
 export const DEFAULT_BASE_URL = "https://api.trackcore.dev";
 

@@ -488,6 +488,12 @@ export interface SetGoalParams {
   /** Where the numbers came from. Omitted is recorded as `user_customised`. */
   readonly formulaVersion?: string | undefined;
   readonly inputs?: Readonly<Record<string, unknown>> | null | undefined;
+  /**
+   * The day's calorie target in kcal, a shorthand for `targets.energy`. Set,
+   * it wins over `targets.energy` in the same call; omitted keeps the one in
+   * force; `null` clears it.
+   */
+  readonly calories?: number | string | null | undefined;
   /** The day's water target in millilitres. Omitted keeps the one in force; `null` clears it. */
   readonly waterMl?: number | null | undefined;
   /** The day's step target. Omitted keeps the one in force; `null` clears it. */
@@ -526,6 +532,7 @@ export async function setGoal(client: HasTransport, params: SetGoalParams): Prom
   }
   if (params.formulaVersion !== undefined) body["formula_version"] = params.formulaVersion;
   if (params.inputs !== undefined) body["inputs"] = params.inputs;
+  if (params.calories !== undefined) body["calories"] = params.calories === null ? null : decimalOrNull(params.calories);
   if (params.waterMl !== undefined) body["water_ml"] = params.waterMl;
   if (params.steps !== undefined) body["steps"] = params.steps;
   const response = await client.transport.request({

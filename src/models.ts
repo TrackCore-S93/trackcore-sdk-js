@@ -647,6 +647,8 @@ export interface Goal {
   /** `user_customised`, or whatever the customer recorded. */
   readonly formula_version: string;
   readonly inputs: Readonly<Record<string, unknown>> | null;
+  /** `targets.energy` by its own name, in kcal, or null. */
+  readonly calories: Decimal | null;
   /** The day's water target in millilitres, or null when this version set none. */
   readonly water_ml: number | null;
   /** The day's step target, or null when this version set none. */

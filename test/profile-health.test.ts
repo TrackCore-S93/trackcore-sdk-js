@@ -78,7 +78,7 @@ describe("profile", () => {
 
 const GOAL =
   '{"external_id":"user_123","effective_from":"2026-11-11","targets":{"energy":{"value":2200,"unit":"kcal"},"protein":{"value":120.5,"unit":"g"}},' +
-  '"formula_version":"user_customised","inputs":null,"water_ml":2000,"steps":8000,"environment":"live"}';
+  '"formula_version":"user_customised","inputs":null,"calories":2200,"water_ml":2000,"steps":8000,"environment":"live"}';
 
 describe("goals", () => {
   it("sets nutrient, water and step targets from today in the zone", async () => {
@@ -96,6 +96,13 @@ describe("goals", () => {
     expect(goal.water_ml).toBe(2000);
     expect(goal.steps).toBe(8000);
     expect(goal.targets["protein"]?.value).toEqual(new Decimal("120.5"));
+  });
+
+  it("sets the calorie goal by its own name", async () => {
+    const { client, sent } = server(GOAL);
+    const goal = await client.diary.setGoal({ calories: 2000, timezone: "Europe/London" });
+    expect(sent[0]!.body).toBe('{"timezone":"Europe/London","calories":2000}');
+    expect(goal.calories).toEqual(new Decimal("2200"));
   });
 
   it("sets the water goal alone, sending nothing else", async () => {

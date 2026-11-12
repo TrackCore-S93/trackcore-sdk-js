@@ -37,7 +37,7 @@ package as a tarball, and npm, Bun, pnpm and yarn all install it from the URL
 (yarn 2 and later want the package name in front of it):
 
 ```sh
-npm install https://github.com/TrackCore-S93/trackcore-sdk-js/releases/download/v0.4.0/trackcore-sdk-0.4.0.tgz
+npm install https://github.com/TrackCore-S93/trackcore-sdk-js/releases/download/v0.4.1/trackcore-sdk-0.4.1.tgz
 bun add https://github.com/TrackCore-S93/trackcore-sdk-js/releases/download/v0.3.1/trackcore-sdk-0.3.1.tgz
 pnpm add https://github.com/TrackCore-S93/trackcore-sdk-js/releases/download/v0.3.1/trackcore-sdk-0.3.1.tgz
 yarn add https://github.com/TrackCore-S93/trackcore-sdk-js/releases/download/v0.3.1/trackcore-sdk-0.3.1.tgz            # yarn 1
