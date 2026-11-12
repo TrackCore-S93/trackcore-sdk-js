@@ -198,6 +198,10 @@ export type ConfigurationErrorReason =
   // reasons because the fix is different — the caller has put a key where a
   // session token goes, or the reverse.
   | "session_token_malformed"
+  // `TrackCore.instance`: a namespace was used before `configure`, or a
+  // user-scoped call before `initialize`.
+  | "not_configured"
+  | "not_initialized"
   | "external_id_not_a_string"
   | "external_id_untrimmed"
   | "external_id_empty"

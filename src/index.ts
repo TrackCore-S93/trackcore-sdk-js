@@ -12,7 +12,7 @@
  * device. `test/surface.test.ts` enforces the line by grepping the surface.
  */
 
-export { TrackCore, DEFAULT_BASE_URL, VERSION, type TrackCoreOptions } from "./client.js";
+export { TrackCore, TrackCoreInstance, DEFAULT_BASE_URL, VERSION, type TrackCoreOptions, type ConfigureOptions } from "./client.js";
 
 // -- end-user identity (D-012) ----------------------------------------------
 // `setUser` / `clearUser` are methods on the client; these are the pieces a
@@ -167,7 +167,7 @@ export type {
   RecipeIngredient,
   CreateRecipeParams,
 } from "./resources/ownfoods.js";
-export type { CreateSessionParams } from "./resources/auth.js";
+export { createSession, type CreateSessionParams } from "./resources/auth.js";
 export type { EraseUserOptions } from "./resources/users.js";
 export type {
   DailyNutrition,

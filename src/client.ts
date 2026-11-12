@@ -116,7 +116,7 @@ import type { JsonObject } from "./json.js";
 import type { BarcodeLookup, BatchReadResult, Food, NlpResult, SearchResults } from "./models.js";
 
 /** The SDK version, stamped into the `User-Agent`. Kept in step with package.json. */
-export const VERSION = "0.3.2";
+export const VERSION = "0.4.0";
 
 export const DEFAULT_BASE_URL = "https://api.trackcore.dev";
 
@@ -158,6 +158,14 @@ export interface TrackCoreOptions {
 }
 
 export class TrackCore {
+  /**
+   * The app-wide singleton: configure once, initialise on sign-in, call from
+   * anywhere. See {@link TrackCoreInstance}.
+   */
+  static get instance(): TrackCoreInstance {
+    return (shared ??= new TrackCoreInstance());
+  }
+
   /** Public so the standalone, tree-shakeable functions can reach it. */
   readonly transport: Transport;
 
@@ -532,3 +540,162 @@ function userAgentHeader(): Record<string, string> {
 }
 
 export { ConfigurationError };
+
+// ---------------------------------------------------------------------------
+// The singleton
+// ---------------------------------------------------------------------------
+
+let shared: TrackCoreInstance | undefined;
+
+/** What `TrackCore.instance.configure` takes: the client options, with the key and the base URL required. */
+export interface ConfigureOptions extends TrackCoreOptions {
+  readonly apiKey: string;
+  readonly baseUrl: string;
+  /**
+   * How long a session minted by `initialize` lives, in seconds. Default and
+   * maximum 86400 (a day). An expired one is renewed on the next call.
+   */
+  readonly sessionTtlSeconds?: number | undefined;
+}
+
+/**
+ * One client for the whole app, held by the SDK rather than passed around.
+ *
+ * ```ts
+ * TrackCore.instance.configure({ apiKey: "tc_pk_live_…", baseUrl: "…" });   // once, at start
+ * await TrackCore.instance.initialize(user.id);                             // on sign-in
+ * await TrackCore.instance.diary.log({ … });                                // anywhere
+ * TrackCore.instance.signOut();                                             // on sign-out
+ * ```
+ *
+ * `initialize` is where the user is named, and it is the last time: with a
+ * publishable key the SDK mints the session itself and renews it when it
+ * expires; with a secret key (a server) it sets the user on every request.
+ * Every namespace below is the configured client's.
+ */
+export class TrackCoreInstance {
+  #client: TrackCore | null = null;
+  #externalId: string | null = null;
+  #ttlSeconds = 86_400;
+
+  /** Creates the client. Calling it again replaces the client and signs out. */
+  configure(options: ConfigureOptions): void {
+    this.#client = new TrackCore(options);
+    this.#externalId = null;
+    this.#ttlSeconds = options.sessionTtlSeconds ?? 86_400;
+  }
+
+  get isConfigured(): boolean {
+    return this.#client !== null;
+  }
+
+  /** True once `initialize` has completed for a user. */
+  get isInitialized(): boolean {
+    return this.#externalId !== null;
+  }
+
+  /** The user `initialize` was given, or `null`. */
+  get externalId(): string | null {
+    return this.#externalId;
+  }
+
+  /**
+   * Names the user, after your own sign-in. Pass whatever uniquely identifies
+   * them in your system: a uid, an email, a row id.
+   *
+   * With a publishable key (an app) this mints a session for that user and
+   * installs a renewer, so a `session_expired` from the server is handled
+   * inside the SDK. With a secret key (a server) it sets the user on every
+   * following request and makes no call.
+   */
+  async initialize(externalId: string): Promise<void> {
+    const client = this.#configured();
+    assertValidExternalId(externalId);
+    if (client.keyKind === "secret") {
+      client.clearSession();
+      client.setUser(externalId);
+      this.#externalId = externalId;
+      return;
+    }
+    const session = await createSession(client, { externalId, ttlSeconds: this.#ttlSeconds });
+    client.setSession(session.session_token);
+    this.#externalId = externalId;
+    client.transport.setSessionRenewer(async () => {
+      if (this.#externalId !== externalId) return null;
+      const renewed = await createSession(client, { externalId, ttlSeconds: this.#ttlSeconds });
+      return renewed.session_token;
+    });
+  }
+
+  /** Forgets the user. The client stays configured. */
+  signOut(): void {
+    const client = this.#client;
+    if (client === null) return;
+    client.transport.setSessionRenewer(null);
+    client.clearSession();
+    client.clearUser();
+    this.#externalId = null;
+  }
+
+  /** The configured client, for anything the namespaces below do not cover. */
+  get client(): TrackCore {
+    return this.#configured();
+  }
+
+  get foods(): TrackCore["foods"] {
+    return this.#configured().foods;
+  }
+  get barcode(): TrackCore["barcode"] {
+    return this.#configured().barcode;
+  }
+  get diary(): TrackCore["diary"] {
+    return this.#scoped().diary;
+  }
+  get profile(): TrackCore["profile"] {
+    return this.#scoped().profile;
+  }
+  get healthData(): TrackCore["healthData"] {
+    return this.#scoped().healthData;
+  }
+  get nutrition(): TrackCore["nutrition"] {
+    return this.#configured().nutrition;
+  }
+  get label(): TrackCore["label"] {
+    return this.#configured().label;
+  }
+  get image(): TrackCore["image"] {
+    return this.#configured().image;
+  }
+  get nlp(): TrackCore["nlp"] {
+    return this.#configured().nlp;
+  }
+  get capabilities(): TrackCore["capabilities"] {
+    return this.#configured().capabilities;
+  }
+  get auth(): TrackCore["auth"] {
+    return this.#configured().auth;
+  }
+  get users(): TrackCore["users"] {
+    return this.#configured().users;
+  }
+
+  /** `GET /healthz`. */
+  health(options: { signal?: AbortSignal | undefined } = {}): Promise<ProbeOk> {
+    return this.#configured().health(options);
+  }
+
+  #configured(): TrackCore {
+    if (this.#client === null) {
+      throw new ConfigurationError("not_configured", "Call TrackCore.instance.configure({ apiKey, baseUrl }) before using the SDK.");
+    }
+    return this.#client;
+  }
+
+  #scoped(): TrackCore {
+    const client = this.#configured();
+    if (this.#externalId === null) {
+      throw new ConfigurationError("not_initialized", "Call await TrackCore.instance.initialize(userId) after sign-in before reading or writing a user's data.");
+    }
+    return client;
+  }
+}

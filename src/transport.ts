@@ -49,7 +49,7 @@ export type FetchLike = (input: string, init: RequestInit) => Promise<Response>;
 
 /** Diagnostics. Never contains a credential, and never an end user's query. */
 export interface Diagnostic {
-  readonly event: "retry" | "cache_hit" | "request" | "response";
+  readonly event: "retry" | "cache_hit" | "request" | "response" | "session_renewed";
   readonly method: string;
   /** Path and query only — the base URL and credentials are not included. */
   readonly path: string;
@@ -70,6 +70,12 @@ export interface TransportOptions {
   readonly cache?: ResponseCache | undefined;
   readonly defaultHeaders?: Readonly<Record<string, string>> | undefined;
   readonly onDiagnostic?: ((d: Diagnostic) => void) | undefined;
+  /**
+   * Called once per request when the server answers `401 session_expired`.
+   * Returns a fresh session token, which replaces the current one before the
+   * request is retried, or `null` to give up and surface the error.
+   */
+  readonly renewSession?: (() => Promise<string | null>) | undefined;
   /** Injectable clock for tests. */
   readonly sleep?: ((ms: number, signal?: AbortSignal) => Promise<void>) | undefined;
   readonly random?: (() => number) | undefined;
@@ -118,6 +124,7 @@ export class Transport {
   readonly #cache: ResponseCache | undefined;
   readonly #defaultHeaders: Record<string, string>;
   #sessionToken: string | null = null;
+  #renewSession: (() => Promise<string | null>) | null;
   readonly #onDiagnostic: (d: Diagnostic) => void;
   readonly #sleep: (ms: number, signal?: AbortSignal) => Promise<void>;
   readonly #random: () => number;
@@ -140,6 +147,7 @@ export class Transport {
   constructor(options: TransportOptions) {
     this.#baseUrl = normaliseBaseUrl(options.baseUrl);
     this.#credential = options.credential;
+    this.#renewSession = options.renewSession ?? null;
 
     const resolved = options.fetch ?? (globalThis.fetch as FetchLike | undefined);
     if (typeof resolved !== "function") {
@@ -191,6 +199,16 @@ export class Transport {
   }
 
   /**
+   * Sets or clears the session renewer: what to call when the server answers
+   * `401 session_expired`. `TrackCore.instance.initialize` installs one that
+   * mints a new token for the same user, so an expired session is invisible
+   * to the app.
+   */
+  setSessionRenewer(renew: (() => Promise<string | null>) | null): void {
+    this.#renewSession = renew;
+  }
+
+  /**
    * Sets or clears the end-user session token. `null` clears.
    *
    * On a device this is the second half of the credential: a publishable key
@@ -225,6 +243,7 @@ export class Transport {
     let attempt = 0;
     let lastOutcome: AttemptOutcome | null = null;
     let lastError: unknown;
+    let renewed = false;
 
     for (;;) {
       attempt++;
@@ -293,6 +312,24 @@ export class Transport {
 
         const error = this.#toError(bodyText, response.status, requestId);
         lastError = error;
+
+        // An expired session is renewed once, in place, and the request is
+        // sent again with the new token. Not a retry under the policy: the
+        // request itself was fine, only the credential had aged.
+        if (
+          !renewed &&
+          this.#renewSession !== null &&
+          error instanceof TrackCoreAPIError &&
+          error.code === "session_expired"
+        ) {
+          renewed = true;
+          const fresh = await this.#renewSession();
+          if (fresh !== null) {
+            this.setSessionToken(fresh);
+            this.#onDiagnostic({ event: "session_renewed", method, path, attempt, status: response.status, requestId });
+            continue;
+          }
+        }
 
         // PF-R2 and PF-X4 put the delay in *two* places: the `Retry-After`
         // header and the envelope's `retry_after_seconds`. The header is read

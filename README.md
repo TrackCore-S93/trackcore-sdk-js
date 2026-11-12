@@ -37,7 +37,7 @@ package as a tarball, and npm, Bun, pnpm and yarn all install it from the URL
 (yarn 2 and later want the package name in front of it):
 
 ```sh
-npm install https://github.com/TrackCore-S93/trackcore-sdk-js/releases/download/v0.3.2/trackcore-sdk-0.3.2.tgz
+npm install https://github.com/TrackCore-S93/trackcore-sdk-js/releases/download/v0.4.0/trackcore-sdk-0.4.0.tgz
 bun add https://github.com/TrackCore-S93/trackcore-sdk-js/releases/download/v0.3.1/trackcore-sdk-0.3.1.tgz
 pnpm add https://github.com/TrackCore-S93/trackcore-sdk-js/releases/download/v0.3.1/trackcore-sdk-0.3.1.tgz
 yarn add https://github.com/TrackCore-S93/trackcore-sdk-js/releases/download/v0.3.1/trackcore-sdk-0.3.1.tgz            # yarn 1
@@ -239,6 +239,19 @@ reporter walking the object graph (SDK-C7, PF-K8). `client.describeCredential()`
 gives you `tc_sk_live_…kM3`, which is what a dashboard shows.
 
 ---
+
+## One instance for the process
+
+```ts
+import { TrackCore } from "@trackcore/sdk";
+
+TrackCore.instance.configure({ apiKey: process.env.TRACKCORE_API_KEY!, baseUrl: "http://143.198.239.216" });
+await TrackCore.instance.initialize(user.id);   // names the user; with a secret key this sets X-External-Id and mints nothing
+await TrackCore.instance.diary.day({ date: "2026-11-12", timezone: "Europe/London" });
+TrackCore.instance.signOut();
+```
+
+`new TrackCore(options)` builds a client you hold yourself, with the same namespaces. In a browser with a publishable key, `initialize` mints a session for the user and renews it when it expires, as the device SDKs do.
 
 ## Identifying your end users
 
