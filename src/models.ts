@@ -83,6 +83,14 @@ export type ServingId = string;
 export type FoodType = "search_food" | "custom_food" | "recipe" | "scan_food";
 
 /**
+ * How the end user said a food was cooked: the six answers a customer's app
+ * offers. `not_sure` is an answer; `null` on an entry means the app did not
+ * ask. A fact about the entry, stored beside `source`; the food snapshot is
+ * never changed by it.
+ */
+export type CookingMethod = "air_fried" | "boiled" | "deep_fried" | "grilled" | "mixed" | "not_sure";
+
+/**
  * How usable this food's serving data is.
  *
  * `"partial"` — servings exist but none is metric and none can be synthesised
@@ -400,6 +408,8 @@ export interface NlpItem {
 export interface NlpResult {
   /** The transcript after trimming. Empty when nothing was said. */
   readonly text: string;
+  /** The `cookingMethod` the search was steered by, or `null` when none was sent. */
+  readonly cooking_method: CookingMethod | null;
   readonly items: readonly NlpItem[];
   readonly query: string;
   readonly search_type: "keyword";
@@ -465,6 +475,8 @@ export interface DiaryMealEntry {
   readonly brand: string | null;
   readonly position: number;
   readonly source: string;
+  /** How the food was cooked, as the end user said, or `null` when the app did not ask. */
+  readonly cooking_method: CookingMethod | null;
   readonly selected_serving_id: ServingId;
   readonly modified_serving: Readonly<Record<string, unknown>> | null;
   readonly serving_description: string;
@@ -535,6 +547,8 @@ export interface LoggedFood {
   readonly food_id: FoodId;
   readonly food_type: FoodType;
   readonly source: string;
+  /** How the food was cooked, as the end user said, or `null` when the app did not ask. */
+  readonly cooking_method: CookingMethod | null;
   readonly position: number;
   readonly selected_serving_id: ServingId;
   readonly modified_serving: Readonly<Record<string, unknown>> | null;

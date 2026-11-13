@@ -94,6 +94,7 @@ export type {
   Capability,
   CapabilityCatalogue,
   CarbohydrateBasis,
+  CookingMethod,
   DataQuality,
   EnergyReconciliation,
   Food,

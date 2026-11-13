@@ -9,10 +9,17 @@ import type { TrackCore } from "../client.js";
 import { decodeNlpResult } from "../decode.js";
 import { ProtocolError } from "../errors.js";
 import type { JsonObject, JsonValue } from "../json.js";
-import type { NlpResult } from "../models.js";
+import type { CookingMethod, NlpResult } from "../models.js";
 import type { LabelImage } from "./label.js";
 
 export interface SearchSpeechOptions {
+  /**
+   * How the food was cooked, one of the six answers the app offers. Steers
+   * every item's catalogue search towards the cooked form ("chicken breast"
+   * with `grilled` is searched as "grilled chicken breast") and is echoed
+   * back as `cooking_method`. Pass the same value to `diary.logFood`.
+   */
+  readonly cookingMethod?: CookingMethod | undefined;
   readonly signal?: AbortSignal | undefined;
   readonly timeoutMs?: number | undefined;
   readonly filename?: string | undefined;
@@ -32,6 +39,7 @@ export async function searchText(
     method: "POST",
     path: "/v1/nlp",
     body: { text },
+    ...(options.cookingMethod === undefined ? {} : { query: { cooking_method: options.cookingMethod } }),
     timeoutMs: options.timeoutMs ?? 20_000,
     ...(options.signal !== undefined ? { signal: options.signal } : {}),
   });
@@ -52,6 +60,7 @@ export async function searchSpeech(
     method: "POST",
     path: "/v1/nlp",
     rawBody: form,
+    ...(options.cookingMethod === undefined ? {} : { query: { cooking_method: options.cookingMethod } }),
     timeoutMs: options.timeoutMs ?? 30_000,
     ...(options.signal !== undefined ? { signal: options.signal } : {}),
   });

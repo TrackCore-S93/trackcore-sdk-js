@@ -2,6 +2,7 @@ import { decodeCardList, decodeCopyResult, decodeDailyNutrition, decodeDeletionR
 import type { HasTransport } from "./foods";
 import { decimalOrNull } from "./profile.js";
 import type {
+  CookingMethod,
   DailyNutrition,
   Goal,
   DiaryMeals,
@@ -130,6 +131,11 @@ export interface LogFoodParams {
   readonly mealName?: string | undefined;
   readonly mealId?: string | undefined;
   readonly source?: string | undefined;
+  /**
+   * How the food was cooked, when the app asked: one of the six answers.
+   * Omitted stores nothing. The same value `nlp.searchText` was steered by.
+   */
+  readonly cookingMethod?: CookingMethod | undefined;
   /** Replaying with the same key returns the original entry, creating none. */
   readonly idempotencyKey?: string | undefined;
   readonly signal?: AbortSignal | undefined;
@@ -157,6 +163,7 @@ export async function logFood(client: HasTransport, params: LogFoodParams): Prom
       meal_name: params.mealName,
       meal_id: params.mealId,
       source: params.source,
+      cooking_method: params.cookingMethod,
     },
     idempotencyKey: params.idempotencyKey,
     signal: params.signal,
@@ -168,6 +175,11 @@ export interface EditPortionParams {
   readonly entryId: string;
   readonly consumedQuantity?: number | string | undefined;
   readonly selectedServingId?: string | undefined;
+  /**
+   * A new answer to how the food was cooked, or `null` to clear the stored
+   * one. Omitted leaves it alone: a quantity-only edit never changes it.
+   */
+  readonly cookingMethod?: CookingMethod | null | undefined;
   readonly signal?: AbortSignal | undefined;
 }
 
@@ -184,6 +196,7 @@ export async function editPortion(client: HasTransport, params: EditPortionParam
     body: {
       consumed_quantity: params.consumedQuantity,
       selected_serving_id: params.selectedServingId,
+      ...(params.cookingMethod === undefined ? {} : { cooking_method: params.cookingMethod }),
     },
     signal: params.signal,
   });

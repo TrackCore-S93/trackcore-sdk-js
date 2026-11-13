@@ -1,6 +1,6 @@
 {
   "name": "@trackcore/sdk",
-  "version": "0.4.1",
+  "version": "0.5.0",
   "description": "TrackCore Web / JavaScript SDK — a thin, typed HTTP client for the TrackCore nutrition API. Server capabilities only (D-015).",
   "license": "UNLICENSED",
   "private": true,

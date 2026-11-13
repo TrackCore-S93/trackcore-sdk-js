@@ -90,3 +90,25 @@ describe("nlp", () => {
     expect(saw).toBe(true);
   });
 });
+
+describe("nlp cooking method", () => {
+  it("sends cookingMethod as the cooking_method query parameter and reads it back", async () => {
+    let url = "";
+    let sent = "";
+    const fetchImpl: FetchLike = async (input, init) => {
+      url = String(input);
+      sent = String(init.body);
+      return {
+        status: 200,
+        headers: new Headers({ "Content-Type": "application/json", "X-Request-Id": "req_test" }),
+        text: async () =>
+          '{"text":"chicken breast","cooking_method":"grilled","items":[],"query":"chicken breast","search_type":"keyword","page":0,"page_size":10,"page_size_clamped":false,"total_results":0,"has_more":false,"results":[]}',
+      } as unknown as Response;
+    };
+    const client = new TrackCore({ apiKey: SECRET, fetch: fetchImpl });
+    const result = await client.nlp.search("chicken breast", { cookingMethod: "grilled" });
+    expect(url).toContain("/v1/nlp?cooking_method=grilled");
+    expect(sent).toBe('{"text":"chicken breast"}');
+    expect(result.cooking_method).toBe("grilled");
+  });
+});
