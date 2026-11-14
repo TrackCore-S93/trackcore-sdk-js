@@ -52,6 +52,7 @@ export {
   isTrackCoreError,
   isAPIError,
   isErrorOfCode,
+  isErrorOfReason,
   type APIErrorInit,
   type ConfigurationErrorReason,
   type ErrorFields,
@@ -68,6 +69,17 @@ export {
   type TrackCoreErrorCode,
   type TrackCoreErrorField,
 } from "./codes.js";
+export {
+  ALL_ERROR_DOMAINS,
+  ALL_ERROR_REASONS,
+  ERROR_REASONS,
+  errorReasonSpec,
+  isErrorDomain,
+  isErrorReason,
+  type ErrorReasonSpec,
+  type TrackCoreErrorDomain,
+  type TrackCoreErrorReason,
+} from "./reasons.js";
 
 // -- tree-shakeable resource functions (SDK-W5) -----------------------------
 export {

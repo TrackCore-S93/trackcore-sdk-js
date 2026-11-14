@@ -43,6 +43,7 @@ import {
 } from "./codes.js";
 import { Decimal } from "./decimal.js";
 import type { JsonObject, JsonValue } from "./json.js";
+import type { TrackCoreErrorDomain, TrackCoreErrorReason } from "./reasons.js";
 
 /** The documented extra fields an envelope may carry, already unwrapped. */
 export type ErrorFields = Partial<Record<TrackCoreErrorField, string | number>>;
@@ -73,6 +74,8 @@ export interface APIErrorInit {
   docsUrl: string;
   retryAfterSeconds: number | null;
   fields: ErrorFields;
+  domain?: TrackCoreErrorDomain | null;
+  reason?: TrackCoreErrorReason | null;
 }
 
 /**
@@ -91,6 +94,21 @@ export class TrackCoreAPIError extends TrackCoreError {
   /** `X-Request-Id`. Quote this in a support ticket. */
   readonly requestId: string | null;
   readonly docsUrl: string;
+  /**
+   * Which feature the failure belongs to: `diary`, `foods`, `nlp`, … The
+   * gateway sets it from the route, so it is on every error it serves; `null`
+   * only for an envelope built before a route was known.
+   */
+  readonly domain: TrackCoreErrorDomain | null;
+  /**
+   * The exact rule that was broken, one level below `code`: `meal_minute_taken`,
+   * `serving_not_on_food`, `value_not_accepted`, … Each belongs to one code and
+   * `message` is its own sentence. `null` when the code alone says it all (a
+   * credential code, an upstream failure). Branch on `code` for what to do
+   * and on this for what to tell the user. A newer gateway may send a slug
+   * this build does not list; `isErrorReason` tells.
+   */
+  readonly reason: TrackCoreErrorReason | null;
   /** Present on `rate_limited` and `capability_maintenance`; sometimes elsewhere. */
   readonly retryAfterSeconds: number | null;
   /** The documented extra fields: `capability`, `upstream`, `limit`, … */
@@ -105,6 +123,8 @@ export class TrackCoreAPIError extends TrackCoreError {
     this.docsUrl = init.docsUrl;
     this.retryAfterSeconds = init.retryAfterSeconds;
     this.fields = Object.freeze({ ...init.fields });
+    this.domain = init.domain ?? null;
+    this.reason = init.reason ?? null;
   }
 
   /** `true` when a later identical request could plausibly succeed. */
@@ -114,7 +134,9 @@ export class TrackCoreAPIError extends TrackCoreError {
 
   override toString(): string {
     const id = this.requestId ? ` (request ${this.requestId})` : "";
-    return `${this.name} [${this.code}]: ${this.message}${id}`;
+    const where = this.domain ? `${this.domain}/` : "";
+    const rule = this.reason ? `#${this.reason}` : "";
+    return `${this.name} [${where}${this.code}${rule}]: ${this.message}${id}`;
   }
 }
 
@@ -333,9 +355,12 @@ export function errorFromEnvelope(
   const retry = envelope["retry_after_seconds"];
   const retryAfterSeconds = retry instanceof Decimal ? retry.toInt() : null;
 
+  const domain = typeof envelope["domain"] === "string" ? (envelope["domain"] as TrackCoreErrorDomain) : null;
+  const reason = typeof envelope["reason"] === "string" ? (envelope["reason"] as TrackCoreErrorReason) : null;
+
   const fields: ErrorFields = {};
   for (const [key, value] of Object.entries(envelope)) {
-    if (BASE_FIELDS.has(key)) continue;
+    if (BASE_FIELDS.has(key) || key === "domain" || key === "reason") continue;
     if (typeof value === "string") {
       fields[key as TrackCoreErrorField] = value;
     } else if (value instanceof Decimal) {
@@ -354,6 +379,8 @@ export function errorFromEnvelope(
     docsUrl,
     retryAfterSeconds,
     fields,
+    domain,
+    reason,
   });
 }
 
@@ -374,6 +401,14 @@ export function isAPIError(value: unknown): value is TrackCoreAPIError {
 }
 
 /** Is this a specific code? `if (isErrorOfCode(err, "food_gone")) { … }` */
+/** Is this a TrackCore API error that broke a given rule? */
+export function isErrorOfReason<R extends TrackCoreErrorReason>(
+  value: unknown,
+  reason: R,
+): value is TrackCoreAPIError & { reason: R } {
+  return isAPIError(value) && value.reason === reason;
+}
+
 export function isErrorOfCode<C extends TrackCoreErrorCode>(
   value: unknown,
   code: C,

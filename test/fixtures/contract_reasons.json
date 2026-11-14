@@ -1,0 +1,720 @@
+{
+  "domains": [
+    "auth",
+    "console",
+    "diary",
+    "foods",
+    "health",
+    "image",
+    "label",
+    "nlp",
+    "platform",
+    "profile"
+  ],
+  "reasons": [
+    {
+      "reason": "image_fetch_failed",
+      "code": "image_fetch_failed",
+      "status": 400,
+      "domain": "image",
+      "message_template": "The image at image_url could not be downloaded.",
+      "required_fields": []
+    },
+    {
+      "reason": "image_fetch_status",
+      "code": "image_fetch_failed",
+      "status": 400,
+      "domain": "image",
+      "message_template": "image_url answered with a status other than 200.",
+      "required_fields": []
+    },
+    {
+      "reason": "image_url_not_fetchable",
+      "code": "image_fetch_failed",
+      "status": 400,
+      "domain": "image",
+      "message_template": "image_url must be an http or https URL that carries no credentials.",
+      "required_fields": []
+    },
+    {
+      "reason": "base_quantity_not_positive",
+      "code": "invalid_quantity",
+      "status": 400,
+      "domain": "foods",
+      "message_template": "A serving's base_quantity must be a positive number.",
+      "required_fields": []
+    },
+    {
+      "reason": "nutrition_not_representable",
+      "code": "invalid_quantity",
+      "status": 400,
+      "domain": "foods",
+      "message_template": "The scaled nutrition is not representable at that quantity.",
+      "required_fields": []
+    },
+    {
+      "reason": "quantity_not_a_number",
+      "code": "invalid_quantity",
+      "status": 400,
+      "domain": "diary",
+      "message_template": "consumed_quantity must be a JSON number, not a string.",
+      "required_fields": []
+    },
+    {
+      "reason": "quantity_not_positive",
+      "code": "invalid_quantity",
+      "status": 400,
+      "domain": "diary",
+      "message_template": "consumed_quantity must be greater than zero.",
+      "required_fields": []
+    },
+    {
+      "reason": "quantity_too_large",
+      "code": "invalid_quantity",
+      "status": 400,
+      "domain": "diary",
+      "message_template": "consumed_quantity is too large to store.",
+      "required_fields": []
+    },
+    {
+      "reason": "quantity_too_precise",
+      "code": "invalid_quantity",
+      "status": 400,
+      "domain": "diary",
+      "message_template": "consumed_quantity may have at most four decimal places; it is refused rather than rounded.",
+      "required_fields": []
+    },
+    {
+      "reason": "scale_quantity_invalid",
+      "code": "invalid_quantity",
+      "status": 400,
+      "domain": "foods",
+      "message_template": "quantity must be a positive JSON number.",
+      "required_fields": []
+    },
+    {
+      "reason": "already_exists",
+      "code": "invalid_request",
+      "status": 400,
+      "domain": "console",
+      "message_template": "{parameter} already exists.",
+      "required_fields": [
+        "parameter"
+      ]
+    },
+    {
+      "reason": "audio_rejected",
+      "code": "invalid_request",
+      "status": 400,
+      "domain": "nlp",
+      "message_template": "The recording could not be transcribed; send WAV, MP3, M4A, OGG or FLAC.",
+      "required_fields": []
+    },
+    {
+      "reason": "audio_required",
+      "code": "invalid_request",
+      "status": 400,
+      "domain": "nlp",
+      "message_template": "A recording is required, in the multipart field `audio`.",
+      "required_fields": []
+    },
+    {
+      "reason": "body_not_json",
+      "code": "invalid_request",
+      "status": 400,
+      "domain": "platform",
+      "message_template": "The body is not readable JSON.",
+      "required_fields": []
+    },
+    {
+      "reason": "body_required",
+      "code": "invalid_request",
+      "status": 400,
+      "domain": "platform",
+      "message_template": "A JSON body is required.",
+      "required_fields": []
+    },
+    {
+      "reason": "capability_unknown",
+      "code": "invalid_request",
+      "status": 400,
+      "domain": "console",
+      "message_template": "capabilities names a code that is unknown or not yet available.",
+      "required_fields": []
+    },
+    {
+      "reason": "date_invalid",
+      "code": "invalid_request",
+      "status": 400,
+      "domain": "platform",
+      "message_template": "{parameter} must be a calendar date as YYYY-MM-DD.",
+      "required_fields": [
+        "parameter"
+      ]
+    },
+    {
+      "reason": "date_required",
+      "code": "invalid_request",
+      "status": 400,
+      "domain": "platform",
+      "message_template": "{parameter} is required, as YYYY-MM-DD.",
+      "required_fields": [
+        "parameter"
+      ]
+    },
+    {
+      "reason": "edit_empty",
+      "code": "invalid_request",
+      "status": 400,
+      "domain": "diary",
+      "message_template": "The edit changes nothing: send consumed_quantity, selected_serving_id, modified_serving or cooking_method.",
+      "required_fields": []
+    },
+    {
+      "reason": "entry_ids_duplicate",
+      "code": "invalid_request",
+      "status": 400,
+      "domain": "diary",
+      "message_template": "entry_ids names the same entry twice.",
+      "required_fields": []
+    },
+    {
+      "reason": "external_id_invalid",
+      "code": "invalid_request",
+      "status": 400,
+      "domain": "platform",
+      "message_template": "external_id must be 1 to 255 printable characters with no surrounding whitespace.",
+      "required_fields": []
+    },
+    {
+      "reason": "external_id_mismatch",
+      "code": "invalid_request",
+      "status": 400,
+      "domain": "platform",
+      "message_template": "The body's external_id does not match the X-External-Id header; the header is authoritative.",
+      "required_fields": []
+    },
+    {
+      "reason": "food_id_required",
+      "code": "invalid_request",
+      "status": 400,
+      "domain": "diary",
+      "message_template": "food_id is required.",
+      "required_fields": []
+    },
+    {
+      "reason": "goal_calories_invalid",
+      "code": "invalid_request",
+      "status": 400,
+      "domain": "diary",
+      "message_template": "calories must be a JSON number of kcal, zero or more, or null to clear it.",
+      "required_fields": []
+    },
+    {
+      "reason": "goal_counter_invalid",
+      "code": "invalid_request",
+      "status": 400,
+      "domain": "diary",
+      "message_template": "{parameter} must be a whole number between 0 and {limit}, or null to clear it.",
+      "required_fields": [
+        "limit",
+        "parameter"
+      ]
+    },
+    {
+      "reason": "goal_empty",
+      "code": "invalid_request",
+      "status": 400,
+      "domain": "diary",
+      "message_template": "Send at least one of calories, targets, water_ml or steps.",
+      "required_fields": []
+    },
+    {
+      "reason": "goal_target_invalid",
+      "code": "invalid_request",
+      "status": 400,
+      "domain": "diary",
+      "message_template": "{parameter} is not a valid target.",
+      "required_fields": [
+        "parameter"
+      ]
+    },
+    {
+      "reason": "goal_targets_unreadable",
+      "code": "invalid_request",
+      "status": 400,
+      "domain": "diary",
+      "message_template": "targets is not a readable nutrition document.",
+      "required_fields": []
+    },
+    {
+      "reason": "health_type_unknown",
+      "code": "invalid_request",
+      "status": 400,
+      "domain": "health",
+      "message_template": "types names a type the catalogue does not have; accepted: {accepted}.",
+      "required_fields": [
+        "accepted"
+      ]
+    },
+    {
+      "reason": "idempotency_key_reused",
+      "code": "invalid_request",
+      "status": 400,
+      "domain": "diary",
+      "message_template": "This idempotency key was already used with a different request body.",
+      "required_fields": []
+    },
+    {
+      "reason": "image_rejected",
+      "code": "invalid_request",
+      "status": 400,
+      "domain": "image",
+      "message_template": "The photo could not be read; send a JPEG or PNG.",
+      "required_fields": []
+    },
+    {
+      "reason": "image_required",
+      "code": "invalid_request",
+      "status": 400,
+      "domain": "image",
+      "message_template": "A photo is required: the multipart field `image`, or JSON `image_url`.",
+      "required_fields": []
+    },
+    {
+      "reason": "image_url_invalid",
+      "code": "invalid_request",
+      "status": 400,
+      "domain": "image",
+      "message_template": "image_url must be an http or https URL.",
+      "required_fields": []
+    },
+    {
+      "reason": "ingredient_invalid",
+      "code": "invalid_request",
+      "status": 400,
+      "domain": "foods",
+      "message_template": "An ingredient is not valid.",
+      "required_fields": []
+    },
+    {
+      "reason": "ingredient_not_found",
+      "code": "invalid_request",
+      "status": 400,
+      "domain": "foods",
+      "message_template": "An ingredient names a food or serving that does not exist.",
+      "required_fields": []
+    },
+    {
+      "reason": "language_invalid",
+      "code": "invalid_request",
+      "status": 400,
+      "domain": "image",
+      "message_template": "language must be two to eight letters.",
+      "required_fields": []
+    },
+    {
+      "reason": "limit_out_of_range",
+      "code": "invalid_request",
+      "status": 400,
+      "domain": "platform",
+      "message_template": "limit must be between 1 and {limit}.",
+      "required_fields": [
+        "limit"
+      ]
+    },
+    {
+      "reason": "meal_edit_empty",
+      "code": "invalid_request",
+      "status": 400,
+      "domain": "diary",
+      "message_template": "The request changes nothing: send a name, a time or flags.",
+      "required_fields": []
+    },
+    {
+      "reason": "meal_minute_taken",
+      "code": "invalid_request",
+      "status": 400,
+      "domain": "diary",
+      "message_template": "Another meal already occupies that minute on that day.",
+      "required_fields": []
+    },
+    {
+      "reason": "meal_name_too_long",
+      "code": "invalid_request",
+      "status": 400,
+      "domain": "diary",
+      "message_template": "meal_name may be at most {limit} characters.",
+      "required_fields": [
+        "limit"
+      ]
+    },
+    {
+      "reason": "meal_retime_incomplete",
+      "code": "invalid_request",
+      "status": 400,
+      "domain": "diary",
+      "message_template": "Re-timing a meal needs eaten_at, local_date and timezone together.",
+      "required_fields": []
+    },
+    {
+      "reason": "modified_serving_conflict",
+      "code": "invalid_request",
+      "status": 400,
+      "domain": "diary",
+      "message_template": "modified_serving and selected_serving_id name different servings.",
+      "required_fields": []
+    },
+    {
+      "reason": "modified_serving_invalid",
+      "code": "invalid_request",
+      "status": 400,
+      "domain": "diary",
+      "message_template": "modified_serving must name a serving in the snapshot by serving_id, or be null to clear the edit.",
+      "required_fields": []
+    },
+    {
+      "reason": "name_required",
+      "code": "invalid_request",
+      "status": 400,
+      "domain": "foods",
+      "message_template": "name is required.",
+      "required_fields": []
+    },
+    {
+      "reason": "nutrient_not_live",
+      "code": "invalid_request",
+      "status": 400,
+      "domain": "foods",
+      "message_template": "A serving's nutrition names a nutrient the catalogue does not carry.",
+      "required_fields": []
+    },
+    {
+      "reason": "parameter_invalid",
+      "code": "invalid_request",
+      "status": 400,
+      "domain": "platform",
+      "message_template": "{parameter} is not valid.",
+      "required_fields": [
+        "parameter"
+      ]
+    },
+    {
+      "reason": "parameter_required",
+      "code": "invalid_request",
+      "status": 400,
+      "domain": "platform",
+      "message_template": "{parameter} is required.",
+      "required_fields": [
+        "parameter"
+      ]
+    },
+    {
+      "reason": "partial_serving_list_refused",
+      "code": "invalid_request",
+      "status": 400,
+      "domain": "foods",
+      "message_template": "include_servings=false is refused: every food read carries every serving.",
+      "required_fields": []
+    },
+    {
+      "reason": "range_end_before_start",
+      "code": "invalid_request",
+      "status": 400,
+      "domain": "platform",
+      "message_template": "`to` is before `from`.",
+      "required_fields": []
+    },
+    {
+      "reason": "range_too_long",
+      "code": "invalid_request",
+      "status": 400,
+      "domain": "platform",
+      "message_template": "The range may span at most {limit} days.",
+      "required_fields": [
+        "limit"
+      ]
+    },
+    {
+      "reason": "records_empty",
+      "code": "invalid_request",
+      "status": 400,
+      "domain": "health",
+      "message_template": "records must hold at least one record.",
+      "required_fields": []
+    },
+    {
+      "reason": "region_invalid",
+      "code": "invalid_request",
+      "status": 400,
+      "domain": "image",
+      "message_template": "region must be two letters.",
+      "required_fields": []
+    },
+    {
+      "reason": "serving_nutrition_invalid",
+      "code": "invalid_request",
+      "status": 400,
+      "domain": "foods",
+      "message_template": "A serving's nutrition carries a value that is not valid.",
+      "required_fields": []
+    },
+    {
+      "reason": "serving_nutrition_unreadable",
+      "code": "invalid_request",
+      "status": 400,
+      "domain": "foods",
+      "message_template": "A serving's nutrition is not a readable nutrition document.",
+      "required_fields": []
+    },
+    {
+      "reason": "servings_count_out_of_range",
+      "code": "invalid_request",
+      "status": 400,
+      "domain": "foods",
+      "message_template": "Between 1 and {limit} servings are required.",
+      "required_fields": [
+        "limit"
+      ]
+    },
+    {
+      "reason": "session_ttl_too_long",
+      "code": "invalid_request",
+      "status": 400,
+      "domain": "auth",
+      "message_template": "ttl_seconds may be at most {limit}.",
+      "required_fields": [
+        "limit"
+      ]
+    },
+    {
+      "reason": "text_required",
+      "code": "invalid_request",
+      "status": 400,
+      "domain": "nlp",
+      "message_template": "text is required, as a JSON string.",
+      "required_fields": []
+    },
+    {
+      "reason": "timestamp_invalid",
+      "code": "invalid_request",
+      "status": 400,
+      "domain": "platform",
+      "message_template": "{parameter} must be an RFC 3339 timestamp.",
+      "required_fields": [
+        "parameter"
+      ]
+    },
+    {
+      "reason": "timezone_not_iana",
+      "code": "invalid_request",
+      "status": 400,
+      "domain": "platform",
+      "message_template": "timezone must be an IANA zone name, such as Europe/London.",
+      "required_fields": []
+    },
+    {
+      "reason": "too_many_items",
+      "code": "invalid_request",
+      "status": 400,
+      "domain": "nlp",
+      "message_template": "At most {limit} items may be resolved in one call.",
+      "required_fields": [
+        "limit"
+      ]
+    },
+    {
+      "reason": "too_many_records",
+      "code": "invalid_request",
+      "status": 400,
+      "domain": "health",
+      "message_template": "records may hold at most {limit} records in one upload.",
+      "required_fields": [
+        "limit"
+      ]
+    },
+    {
+      "reason": "too_many_target_dates",
+      "code": "invalid_request",
+      "status": 400,
+      "domain": "diary",
+      "message_template": "At most {limit} target dates may be copied to in one call.",
+      "required_fields": [
+        "limit"
+      ]
+    },
+    {
+      "reason": "value_not_accepted",
+      "code": "invalid_request",
+      "status": 400,
+      "domain": "platform",
+      "message_template": "{parameter} must be one of: {accepted}.",
+      "required_fields": [
+        "accepted",
+        "parameter"
+      ]
+    },
+    {
+      "reason": "value_out_of_range",
+      "code": "invalid_request",
+      "status": 400,
+      "domain": "platform",
+      "message_template": "{parameter} is outside the accepted range.",
+      "required_fields": [
+        "parameter"
+      ]
+    },
+    {
+      "reason": "role_not_permitted",
+      "code": "user_scope_violation",
+      "status": 403,
+      "domain": "console",
+      "message_template": "Your role does not allow this.",
+      "required_fields": []
+    },
+    {
+      "reason": "secret_key_required",
+      "code": "user_scope_violation",
+      "status": 403,
+      "domain": "auth",
+      "message_template": "This operation needs a secret key; a publishable key cannot perform it.",
+      "required_fields": []
+    },
+    {
+      "reason": "session_user_mismatch",
+      "code": "user_scope_violation",
+      "status": 403,
+      "domain": "auth",
+      "message_template": "The session token belongs to a different end user than the one named.",
+      "required_fields": []
+    },
+    {
+      "reason": "custom_food_not_found",
+      "code": "resource_not_found",
+      "status": 404,
+      "domain": "foods",
+      "message_template": "No custom food with that id belongs to this end user.",
+      "required_fields": []
+    },
+    {
+      "reason": "customer_not_found",
+      "code": "resource_not_found",
+      "status": 404,
+      "domain": "console",
+      "message_template": "No customer has that id.",
+      "required_fields": []
+    },
+    {
+      "reason": "entry_not_found",
+      "code": "resource_not_found",
+      "status": 404,
+      "domain": "diary",
+      "message_template": "No diary entry with that id belongs to this end user.",
+      "required_fields": []
+    },
+    {
+      "reason": "favourite_not_found",
+      "code": "resource_not_found",
+      "status": 404,
+      "domain": "diary",
+      "message_template": "That food is not among this end user's favourites.",
+      "required_fields": []
+    },
+    {
+      "reason": "food_not_found",
+      "code": "resource_not_found",
+      "status": 404,
+      "domain": "foods",
+      "message_template": "No food has that id, or it is not available to this end user.",
+      "required_fields": []
+    },
+    {
+      "reason": "goal_not_found",
+      "code": "resource_not_found",
+      "status": 404,
+      "domain": "diary",
+      "message_template": "This end user has no goal in force on that date.",
+      "required_fields": []
+    },
+    {
+      "reason": "key_not_found",
+      "code": "resource_not_found",
+      "status": 404,
+      "domain": "console",
+      "message_template": "No API key has that id.",
+      "required_fields": []
+    },
+    {
+      "reason": "meal_not_found",
+      "code": "resource_not_found",
+      "status": 404,
+      "domain": "diary",
+      "message_template": "No meal with that id belongs to this end user.",
+      "required_fields": []
+    },
+    {
+      "reason": "reveal_gone",
+      "code": "resource_not_found",
+      "status": 404,
+      "domain": "console",
+      "message_template": "No secret is waiting to be revealed for this key; a secret is shown once.",
+      "required_fields": []
+    },
+    {
+      "reason": "food_withdrawn",
+      "code": "food_gone",
+      "status": 410,
+      "domain": "foods",
+      "message_template": "The provider no longer resolves this food id.",
+      "required_fields": []
+    },
+    {
+      "reason": "snapshot_unavailable",
+      "code": "food_gone",
+      "status": 410,
+      "domain": "diary",
+      "message_template": "The entry's stored food snapshot has been archived, so the portion cannot be recomputed.",
+      "required_fields": []
+    },
+    {
+      "reason": "food_has_no_default_serving",
+      "code": "food_unusable",
+      "status": 422,
+      "domain": "foods",
+      "message_template": "This food names no default serving; send selected_serving_id.",
+      "required_fields": []
+    },
+    {
+      "reason": "food_has_no_servings",
+      "code": "food_unusable",
+      "status": 422,
+      "domain": "foods",
+      "message_template": "This food publishes no serving, so it cannot be logged or scaled.",
+      "required_fields": []
+    },
+    {
+      "reason": "serving_unusable",
+      "code": "food_unusable",
+      "status": 422,
+      "domain": "foods",
+      "message_template": "The serving's nutrition cannot be scaled.",
+      "required_fields": []
+    },
+    {
+      "reason": "serving_not_on_food",
+      "code": "serving_not_found",
+      "status": 422,
+      "domain": "foods",
+      "message_template": "The serving named is not one of this food's servings.",
+      "required_fields": []
+    },
+    {
+      "reason": "request_in_flight",
+      "code": "rate_limited",
+      "status": 429,
+      "domain": "diary",
+      "message_template": "An identical request with this idempotency key is still being processed; retry shortly.",
+      "required_fields": []
+    }
+  ]
+}

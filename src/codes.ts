@@ -354,10 +354,12 @@ export const ERROR_CODES: Readonly<Record<TrackCoreErrorCode, ErrorCodeSpec>> = 
 export type TrackCoreErrorField =
   | "accepted"
   | "capability"
+  | "domain"
   | "limit"
   | "limit_bytes"
   | "measured_bytes"
   | "parameter"
+  | "reason"
   | "upstream";
 
 /** Narrows an arbitrary string to a member of the enumeration. */

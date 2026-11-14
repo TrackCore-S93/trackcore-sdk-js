@@ -6,7 +6,10 @@
     "retry_after": "forbidden",
     "docs_url": "https://docs.trackcore.dev/errors/ambiguous_credentials",
     "required_fields": [],
-    "allowed_fields": [],
+    "allowed_fields": [
+      "domain",
+      "reason"
+    ],
     "message_template": "Send either a secret key or a session token, not both."
   },
   {
@@ -16,7 +19,10 @@
     "retry_after": "forbidden",
     "docs_url": "https://docs.trackcore.dev/errors/image_fetch_failed",
     "required_fields": [],
-    "allowed_fields": [],
+    "allowed_fields": [
+      "domain",
+      "reason"
+    ],
     "message_template": "The image at the supplied URL could not be fetched."
   },
   {
@@ -27,7 +33,9 @@
     "docs_url": "https://docs.trackcore.dev/errors/invalid_barcode",
     "required_fields": [],
     "allowed_fields": [
-      "accepted"
+      "accepted",
+      "domain",
+      "reason"
     ],
     "message_template": "The supplied barcode is not valid."
   },
@@ -38,7 +46,10 @@
     "retry_after": "forbidden",
     "docs_url": "https://docs.trackcore.dev/errors/invalid_quantity",
     "required_fields": [],
-    "allowed_fields": [],
+    "allowed_fields": [
+      "domain",
+      "reason"
+    ],
     "message_template": "`consumed_quantity` must be a positive number."
   },
   {
@@ -52,8 +63,10 @@
     ],
     "allowed_fields": [
       "accepted",
+      "domain",
       "limit",
-      "parameter"
+      "parameter",
+      "reason"
     ],
     "message_template": "The request was rejected: {parameter} is missing or not valid."
   },
@@ -64,7 +77,10 @@
     "retry_after": "forbidden",
     "docs_url": "https://docs.trackcore.dev/errors/invalid_servings",
     "required_fields": [],
-    "allowed_fields": [],
+    "allowed_fields": [
+      "domain",
+      "reason"
+    ],
     "message_template": "`recipe_servings` must be a positive number."
   },
   {
@@ -77,7 +93,9 @@
       "limit"
     ],
     "allowed_fields": [
-      "limit"
+      "domain",
+      "limit",
+      "reason"
     ],
     "message_template": "The search query is longer than {limit} characters."
   },
@@ -91,7 +109,9 @@
       "limit"
     ],
     "allowed_fields": [
-      "limit"
+      "domain",
+      "limit",
+      "reason"
     ],
     "message_template": "The search query is shorter than {limit} characters."
   },
@@ -102,7 +122,10 @@
     "retry_after": "forbidden",
     "docs_url": "https://docs.trackcore.dev/errors/text_required",
     "required_fields": [],
-    "allowed_fields": [],
+    "allowed_fields": [
+      "domain",
+      "reason"
+    ],
     "message_template": "`text` is required and must not be empty."
   },
   {
@@ -115,7 +138,9 @@
       "limit"
     ],
     "allowed_fields": [
-      "limit"
+      "domain",
+      "limit",
+      "reason"
     ],
     "message_template": "`text` is longer than the {limit} character limit."
   },
@@ -126,7 +151,10 @@
     "retry_after": "forbidden",
     "docs_url": "https://docs.trackcore.dev/errors/timezone_required",
     "required_fields": [],
-    "allowed_fields": [],
+    "allowed_fields": [
+      "domain",
+      "reason"
+    ],
     "message_template": "An IANA `timezone` is required on every diary write."
   },
   {
@@ -139,7 +167,9 @@
       "limit"
     ],
     "allowed_fields": [
-      "limit"
+      "domain",
+      "limit",
+      "reason"
     ],
     "message_template": "At most {limit} ids may be requested in one call."
   },
@@ -153,7 +183,9 @@
       "limit"
     ],
     "allowed_fields": [
-      "limit"
+      "domain",
+      "limit",
+      "reason"
     ],
     "message_template": "The device clock is outside the permitted {limit} second leeway."
   },
@@ -164,7 +196,10 @@
     "retry_after": "forbidden",
     "docs_url": "https://docs.trackcore.dev/errors/credential_malformed",
     "required_fields": [],
-    "allowed_fields": [],
+    "allowed_fields": [
+      "domain",
+      "reason"
+    ],
     "message_template": "The API credential could not be parsed."
   },
   {
@@ -174,7 +209,10 @@
     "retry_after": "forbidden",
     "docs_url": "https://docs.trackcore.dev/errors/credential_missing",
     "required_fields": [],
-    "allowed_fields": [],
+    "allowed_fields": [
+      "domain",
+      "reason"
+    ],
     "message_template": "No API credential was supplied."
   },
   {
@@ -184,7 +222,10 @@
     "retry_after": "forbidden",
     "docs_url": "https://docs.trackcore.dev/errors/credential_revoked",
     "required_fields": [],
-    "allowed_fields": [],
+    "allowed_fields": [
+      "domain",
+      "reason"
+    ],
     "message_template": "This API credential has been revoked."
   },
   {
@@ -194,7 +235,10 @@
     "retry_after": "forbidden",
     "docs_url": "https://docs.trackcore.dev/errors/credential_unknown",
     "required_fields": [],
-    "allowed_fields": [],
+    "allowed_fields": [
+      "domain",
+      "reason"
+    ],
     "message_template": "This API credential is not recognised."
   },
   {
@@ -204,7 +248,10 @@
     "retry_after": "forbidden",
     "docs_url": "https://docs.trackcore.dev/errors/key_revoked",
     "required_fields": [],
-    "allowed_fields": [],
+    "allowed_fields": [
+      "domain",
+      "reason"
+    ],
     "message_template": "This key's rotation overlap window has expired."
   },
   {
@@ -214,7 +261,10 @@
     "retry_after": "forbidden",
     "docs_url": "https://docs.trackcore.dev/errors/session_expired",
     "required_fields": [],
-    "allowed_fields": [],
+    "allowed_fields": [
+      "domain",
+      "reason"
+    ],
     "message_template": "The end-user session token has expired."
   },
   {
@@ -224,7 +274,10 @@
     "retry_after": "optional",
     "docs_url": "https://docs.trackcore.dev/errors/quota_exceeded",
     "required_fields": [],
-    "allowed_fields": [],
+    "allowed_fields": [
+      "domain",
+      "reason"
+    ],
     "message_template": "The plan's allowance for this period is exhausted."
   },
   {
@@ -237,7 +290,9 @@
       "capability"
     ],
     "allowed_fields": [
-      "capability"
+      "capability",
+      "domain",
+      "reason"
     ],
     "message_template": "A signed Data Processing Agreement is required for {capability}."
   },
@@ -251,7 +306,9 @@
       "capability"
     ],
     "allowed_fields": [
-      "capability"
+      "capability",
+      "domain",
+      "reason"
     ],
     "message_template": "Your plan does not include the {capability} capability."
   },
@@ -262,7 +319,10 @@
     "retry_after": "forbidden",
     "docs_url": "https://docs.trackcore.dev/errors/user_scope_violation",
     "required_fields": [],
-    "allowed_fields": [],
+    "allowed_fields": [
+      "domain",
+      "reason"
+    ],
     "message_template": "This session token is not scoped to that end-user."
   },
   {
@@ -272,7 +332,10 @@
     "retry_after": "forbidden",
     "docs_url": "https://docs.trackcore.dev/errors/resource_not_found",
     "required_fields": [],
-    "allowed_fields": [],
+    "allowed_fields": [
+      "domain",
+      "reason"
+    ],
     "message_template": "No such resource."
   },
   {
@@ -282,7 +345,10 @@
     "retry_after": "forbidden",
     "docs_url": "https://docs.trackcore.dev/errors/user_not_found",
     "required_fields": [],
-    "allowed_fields": [],
+    "allowed_fields": [
+      "domain",
+      "reason"
+    ],
     "message_template": "No such end-user."
   },
   {
@@ -292,7 +358,10 @@
     "retry_after": "forbidden",
     "docs_url": "https://docs.trackcore.dev/errors/food_gone",
     "required_fields": [],
-    "allowed_fields": [],
+    "allowed_fields": [
+      "domain",
+      "reason"
+    ],
     "message_template": "This food is no longer resolvable from its provider."
   },
   {
@@ -306,8 +375,10 @@
       "measured_bytes"
     ],
     "allowed_fields": [
+      "domain",
       "limit_bytes",
-      "measured_bytes"
+      "measured_bytes",
+      "reason"
     ],
     "message_template": "The image is {measured_bytes} bytes; the limit is {limit_bytes}."
   },
@@ -318,7 +389,10 @@
     "retry_after": "forbidden",
     "docs_url": "https://docs.trackcore.dev/errors/unsupported_image_format",
     "required_fields": [],
-    "allowed_fields": [],
+    "allowed_fields": [
+      "domain",
+      "reason"
+    ],
     "message_template": "Only image/jpeg and image/png are accepted."
   },
   {
@@ -328,7 +402,10 @@
     "retry_after": "forbidden",
     "docs_url": "https://docs.trackcore.dev/errors/unsupported_media_type",
     "required_fields": [],
-    "allowed_fields": [],
+    "allowed_fields": [
+      "domain",
+      "reason"
+    ],
     "message_template": "This endpoint accepts application/json only."
   },
   {
@@ -338,7 +415,10 @@
     "retry_after": "forbidden",
     "docs_url": "https://docs.trackcore.dev/errors/food_unusable",
     "required_fields": [],
-    "allowed_fields": [],
+    "allowed_fields": [
+      "domain",
+      "reason"
+    ],
     "message_template": "This food has no usable serving data and cannot be logged."
   },
   {
@@ -348,7 +428,10 @@
     "retry_after": "forbidden",
     "docs_url": "https://docs.trackcore.dev/errors/recipe_cycle_detected",
     "required_fields": [],
-    "allowed_fields": [],
+    "allowed_fields": [
+      "domain",
+      "reason"
+    ],
     "message_template": "This recipe would contain itself."
   },
   {
@@ -361,7 +444,9 @@
       "limit"
     ],
     "allowed_fields": [
-      "limit"
+      "domain",
+      "limit",
+      "reason"
     ],
     "message_template": "Recipes may nest at most {limit} deep."
   },
@@ -372,7 +457,10 @@
     "retry_after": "forbidden",
     "docs_url": "https://docs.trackcore.dev/errors/serving_not_found",
     "required_fields": [],
-    "allowed_fields": [],
+    "allowed_fields": [
+      "domain",
+      "reason"
+    ],
     "message_template": "That serving is not present on this food."
   },
   {
@@ -382,7 +470,10 @@
     "retry_after": "required",
     "docs_url": "https://docs.trackcore.dev/errors/rate_limited",
     "required_fields": [],
-    "allowed_fields": [],
+    "allowed_fields": [
+      "domain",
+      "reason"
+    ],
     "message_template": "Too many requests."
   },
   {
@@ -392,7 +483,10 @@
     "retry_after": "forbidden",
     "docs_url": "https://docs.trackcore.dev/errors/internal_error",
     "required_fields": [],
-    "allowed_fields": [],
+    "allowed_fields": [
+      "domain",
+      "reason"
+    ],
     "message_template": "Something went wrong on TrackCore's side."
   },
   {
@@ -405,6 +499,8 @@
       "upstream"
     ],
     "allowed_fields": [
+      "domain",
+      "reason",
       "upstream"
     ],
     "message_template": "A service TrackCore depends on is unavailable."
@@ -419,7 +515,9 @@
       "capability"
     ],
     "allowed_fields": [
-      "capability"
+      "capability",
+      "domain",
+      "reason"
     ],
     "message_template": "{capability} is in planned maintenance."
   }
