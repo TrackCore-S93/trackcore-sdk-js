@@ -206,6 +206,8 @@ export type {
   GoalKind,
   Profile,
   ProfileOnboarding,
+  OwnFoodSearchResults,
+  OwnFoodSearchResult,
   CalculateResult,
   HealthPlatform,
   HealthSource,

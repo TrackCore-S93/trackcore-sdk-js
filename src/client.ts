@@ -82,7 +82,9 @@ import type {
   DiaryRange,
   DiaryMeal,
   LoggedFood,
+  Card,
   CardList,
+  OwnFoodSearchResults,
   DeletionReceipt,
   ReorderResult,
   CopyResult,
@@ -358,7 +360,7 @@ export class TrackCore {
     favourites: (options?: { limit?: number; signal?: AbortSignal }): Promise<CardList> =>
       listFavourites(this, options),
     /** `POST /v1/diary/favourites/{food_id}`. See {@link addFavourite}. */
-    addFavourite: (foodId: string, options?: { signal?: AbortSignal }): Promise<unknown> =>
+    addFavourite: (foodId: string, options?: { signal?: AbortSignal }): Promise<Card> =>
       addFavourite(this, foodId, options),
     /** `DELETE /v1/diary/favourites/{food_id}`. See {@link removeFavourite}. */
     removeFavourite: (foodId: string, options?: { signal?: AbortSignal }): Promise<DeletionReceipt> =>
@@ -366,7 +368,7 @@ export class TrackCore {
     /** `GET /v1/diary/recents`. See {@link listRecents}. */
     recents: (options?: { limit?: number; signal?: AbortSignal }): Promise<CardList> => listRecents(this, options),
     /** `GET /v1/diary/foods/search`. The end user's own foods, not the provider's. */
-    searchOwnFoods: (params: { q: string; limit?: number; signal?: AbortSignal }): Promise<unknown> =>
+    searchOwnFoods: (params: { q: string; limit?: number; signal?: AbortSignal }): Promise<OwnFoodSearchResults> =>
       searchOwnFoods(this, params),
     /**
      * `PUT /v1/diary/goal`. The daily targets your app sets: nutrients, water

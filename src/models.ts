@@ -593,6 +593,24 @@ export interface CardList {
   readonly environment: "test" | "live";
 }
 
+/** One of the end user's own foods, as `GET /v1/diary/foods/search` lists it. */
+export interface OwnFoodSearchResult {
+  readonly food_id: FoodId;
+  readonly food_type: "custom_food" | "recipe";
+  readonly name: string;
+  readonly brand: string | null;
+  readonly default_serving_id: ServingId | null;
+  readonly updated_at: Timestamp;
+}
+
+export interface OwnFoodSearchResults {
+  readonly external_id: string;
+  /** The query as applied, after trimming. */
+  readonly query: string;
+  readonly results: readonly OwnFoodSearchResult[];
+  readonly environment: "test" | "live";
+}
+
 export interface DeletionReceipt {
   readonly external_id: string;
   readonly deleted: boolean;

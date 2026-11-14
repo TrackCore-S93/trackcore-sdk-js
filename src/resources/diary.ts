@@ -1,7 +1,8 @@
-import { decodeCardList, decodeCopyResult, decodeDailyNutrition, decodeDeletionReceipt, decodeDiaryMeal, decodeDiaryMeals, decodeDiaryRange, decodeGoal, decodeLoggedFood, decodeReorderResult } from "../decode.js";
+import { decodeCard, decodeCardList, decodeCopyResult, decodeDailyNutrition, decodeDeletionReceipt, decodeDiaryMeal, decodeDiaryMeals, decodeDiaryRange, decodeGoal, decodeLoggedFood, decodeOwnFoodSearchResults, decodeReorderResult } from "../decode.js";
 import type { HasTransport } from "./foods";
 import { decimalOrNull } from "./profile.js";
 import type {
+  Card,
   CookingMethod,
   DailyNutrition,
   Goal,
@@ -9,6 +10,7 @@ import type {
   DiaryRange,
   CardList,
   LoggedFood,
+  OwnFoodSearchResults,
   DiaryMeal,
   DeletionReceipt,
   ReorderResult,
@@ -415,18 +417,23 @@ export async function listFavourites(
   return decodeCardList(response.body);
 }
 
-/** `POST /v1/diary/favourites/{food_id}` — star a food. Starring twice is fine. */
+/**
+ * `POST /v1/diary/favourites/{food_id}` — star a food. Starring twice is fine.
+ *
+ * Returns the card as it was taken: enough to render a row (DM-FR1), with
+ * `favourited_at` and `card_refreshed_at`.
+ */
 export async function addFavourite(
   client: HasTransport,
   foodId: string,
   options?: { readonly signal?: AbortSignal | undefined },
-): Promise<unknown> {
+): Promise<Card> {
   const response = await client.transport.request({
     method: "POST",
     path: `/v1/diary/favourites/${encodeURIComponent(foodId)}`,
     signal: options?.signal,
   });
-  return response.body;
+  return decodeCard(response.body);
 }
 
 /** `DELETE /v1/diary/favourites/{food_id}` — unstar a food. */
@@ -475,14 +482,14 @@ export async function listRecents(
 export async function searchOwnFoods(
   client: HasTransport,
   params: { readonly q: string; readonly limit?: number | undefined; readonly signal?: AbortSignal | undefined },
-): Promise<unknown> {
+): Promise<OwnFoodSearchResults> {
   const response = await client.transport.request({
     method: "GET",
     path: "/v1/diary/foods/search",
     query: { q: params.q, limit: params.limit },
     signal: params.signal,
   });
-  return response.body;
+  return decodeOwnFoodSearchResults(response.body);
 }
 
 // ---------------------------------------------------------------------------

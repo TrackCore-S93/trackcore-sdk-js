@@ -52,6 +52,8 @@ import type {
   SearchResults,
   SessionToken,
   ErasureReceipt,
+  Card,
+  OwnFoodSearchResults,
 } from "./models.js";
 
 /**
@@ -166,6 +168,8 @@ export const decodeDiaryRange = (body: JsonValue): DiaryRange => decode<DiaryRan
 export const decodeDiaryMeal = (body: JsonValue): DiaryMeal => decode<DiaryMeal>(body);
 export const decodeLoggedFood = (body: JsonValue): LoggedFood => decode<LoggedFood>(body);
 export const decodeCardList = (body: JsonValue): CardList => decode<CardList>(body);
+export const decodeCard = (body: JsonValue): Card => decode<Card>(body);
+export const decodeOwnFoodSearchResults = (body: JsonValue): OwnFoodSearchResults => decode<OwnFoodSearchResults>(body);
 export const decodeDeletionReceipt = (body: JsonValue): DeletionReceipt => decode<DeletionReceipt>(body);
 export const decodeReorderResult = (body: JsonValue): ReorderResult => decode<ReorderResult>(body);
 export const decodeCopyResult = (body: JsonValue): CopyResult => decode<CopyResult>(body);
