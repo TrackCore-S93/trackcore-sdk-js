@@ -291,9 +291,10 @@ export interface EditMealParams {
 /**
  * `PATCH /v1/diary/meals/{id}` — rename, re-time or re-flag a meal.
  *
- * Re-timing moves the meal, **not** the entries inside it: an entry carries its
- * own `eaten_at` and `local_date`, which is what keeps a 23:50 entry on the
- * right local day.
+ * Re-timing moves the meal **and the entries inside it**: each is shifted by
+ * the same difference and takes the meal's new `localDate` and `timezone`, so
+ * a meal moved across midnight takes its foods to the new day. Renaming or
+ * re-flagging touches no entry.
  */
 export async function editMeal(client: HasTransport, params: EditMealParams): Promise<DiaryMeal> {
   const response = await client.transport.request({
