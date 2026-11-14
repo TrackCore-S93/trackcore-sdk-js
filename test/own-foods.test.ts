@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { TrackCore } from "../src/client.js";
 import type { FetchLike } from "../src/transport.js";
 
-const SECRET = "tc_sk_test_" + "a".repeat(32);
+const SECRET = `tc_sk_live_${"7kQ2mF4xT9bR3vN8pL5wC1yH6zJ0dG7sA4eU2iO9kM3"}`;
 
 function clientAnswering(body: string, status = 200): { client: TrackCore; seen: () => string } {
   let url = "";
