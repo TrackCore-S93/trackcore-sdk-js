@@ -694,6 +694,18 @@ export type ActivityLevel = "sedentary" | "light" | "moderate" | "very" | "extra
 export type GoalKind = "lose" | "maintain" | "gain";
 
 /** The end user's nutrition profile. Every attribute is null until given. */
+/**
+ * What an app reads on launch: whether it marked its onboarding flow complete
+ * for this end user, when, and which of the attributes the flow asks for are
+ * still not given. `missing` is reported whether or not the flow was marked
+ * complete, so an app can resume at the right screen.
+ */
+export interface ProfileOnboarding {
+  readonly completed: boolean;
+  readonly completed_at: Timestamp | null;
+  readonly missing: readonly ("sex" | "date_of_birth" | "height_cm" | "activity_level" | "goal_kind" | "target_weight_kg")[];
+}
+
 export interface Profile {
   readonly external_id: string;
   readonly sex: Sex | null;
@@ -711,6 +723,8 @@ export interface Profile {
    * file: it is health data and the same two gates apply.
    */
   readonly current_weight_kg: DayWeight | null;
+  /** The onboarding checker: the app's own mark, and which attributes are still missing. */
+  readonly onboarding: ProfileOnboarding;
   /** Null for an end user who has given nothing yet. */
   readonly updated_at: Timestamp | null;
   readonly environment: "test" | "live";

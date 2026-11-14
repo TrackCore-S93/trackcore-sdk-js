@@ -205,6 +205,7 @@ export type {
   ActivityLevel,
   GoalKind,
   Profile,
+  ProfileOnboarding,
   CalculateResult,
   HealthPlatform,
   HealthSource,

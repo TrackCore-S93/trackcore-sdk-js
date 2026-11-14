@@ -32,6 +32,12 @@ export interface ProfilePatch {
   readonly goalKind?: GoalKind | null | undefined;
   /** Kilograms. */
   readonly targetWeightKg?: string | number | null | undefined;
+  /**
+   * `true` marks the app's onboarding flow complete for this end user,
+   * stamping the time; `false` or `null` clears the mark. Stated by the app,
+   * never inferred by the server. Read it back as `profile.onboarding`.
+   */
+  readonly onboardingCompleted?: boolean | null | undefined;
   readonly signal?: AbortSignal | undefined;
 }
 
@@ -59,6 +65,7 @@ export async function setProfile(client: HasTransport, patch: ProfilePatch): Pro
   if (patch.activityLevel !== undefined) body["activity_level"] = patch.activityLevel;
   if (patch.goalKind !== undefined) body["goal_kind"] = patch.goalKind;
   if (patch.targetWeightKg !== undefined) body["target_weight_kg"] = decimalOrNull(patch.targetWeightKg);
+  if (patch.onboardingCompleted !== undefined) body["onboarding_completed"] = patch.onboardingCompleted;
   const response = await client.transport.request({
     method: "PUT",
     path: "/v1/profile",
