@@ -234,3 +234,66 @@ describe("the calculator", () => {
     expect(result.activity_multiplier).toEqual(new Decimal("1.55"));
   });
 });
+
+const PLAN =
+  '{"external_id":"user_123","ready":true,"missing":[],' +
+  '"bmr":{"value":1768,"unit":"kcal"},"tdee":{"value":2740,"unit":"kcal"},"energy":{"value":2240,"unit":"kcal"},' +
+  '"protein":{"value":168,"unit":"g"},"carbohydrate":{"value":263,"unit":"g","basis":"total"},"fat":{"value":57,"unit":"g"},' +
+  '"daily_energy_delta":{"value":-500,"unit":"kcal"},"macro_split":{"protein":30,"carbohydrate":47,"fat":23},' +
+  '"weekly_weight_change_kg":-0.45,"estimated_days_to_goal":108,"energy_floor_applied":false,' +
+  '"formula_version":"mifflin_st_jeor_v1","plan_version":"plan_v1","activity_multiplier":1.550,' +
+  '"targets":{"carbohydrate":{"value":263,"unit":"g","basis":"total"},"energy":{"value":2240,"unit":"kcal"},' +
+  '"fat":{"value":57,"unit":"g"},"protein":{"value":168,"unit":"g"}},' +
+  '"inputs":{"sex":"male","age":34,"height_cm":178.0,"weight_kg":82.0,"activity_level":"moderate","goal_kind":"lose","target_weight_kg":75.0},' +
+  '"environment":"live"}';
+
+describe("the nutrition plan", () => {
+  it("reads the plan for the end user and hands its targets to setGoal unchanged", async () => {
+    const { client, sent } = server(PLAN);
+    const plan = await client.nutrition.plan({ timezone: "Europe/London" });
+    expect(sent[0]!.method).toBe("GET");
+    expect(sent[0]!.url).toContain("/v1/nutrition/plan?timezone=Europe%2FLondon");
+    expect(sent[0]!.headers.get("X-External-Id")).toBe("user_123");
+
+    expect(plan.ready).toBe(true);
+    expect(plan.energy.value).toEqual(new Decimal("2240"));
+    expect(plan.daily_energy_delta.value).toEqual(new Decimal("-500"));
+    expect(plan.carbohydrate.value).toEqual(new Decimal("263"));
+    expect(plan.macro_split).toEqual({ protein: 30, carbohydrate: 47, fat: 23 });
+    expect(plan.weekly_weight_change_kg).toEqual(new Decimal("-0.45"));
+    expect(plan.estimated_days_to_goal).toBe(108);
+    expect(plan.inputs.age).toBe(34);
+
+    // "Start tracking": the plan becomes the goal with no arithmetic in the app.
+    await client.diary.setGoal({
+      targets: plan.targets,
+      timezone: "Europe/London",
+      formulaVersion: plan.plan_version,
+      inputs: plan.inputs,
+    });
+    const body = JSON.parse(sent[1]!.body!) as Record<string, unknown>;
+    expect(sent[1]!.body).toContain('"energy":{"value":2240,"unit":"kcal"}');
+    expect(sent[1]!.body).toContain('"carbohydrate":{"value":263,"unit":"g"}');
+    expect(sent[1]!.body).not.toContain('"value":"');
+    expect(body["formula_version"]).toBe("plan_v1");
+    expect((body["inputs"] as Record<string, unknown>)["goal_kind"]).toBe("lose");
+  });
+
+  it("is not an error when the profile is incomplete", async () => {
+    const { client } = server(
+      '{"external_id":"user_123","ready":false,"missing":["date_of_birth","current_weight_kg"],' +
+        '"bmr":{"value":null,"unit":"kcal"},"tdee":{"value":null,"unit":"kcal"},"energy":{"value":null,"unit":"kcal"},' +
+        '"protein":{"value":null,"unit":"g"},"carbohydrate":{"value":null,"unit":"g","basis":"total"},"fat":{"value":null,"unit":"g"},' +
+        '"daily_energy_delta":{"value":null,"unit":"kcal"},"macro_split":null,"weekly_weight_change_kg":null,' +
+        '"estimated_days_to_goal":null,"energy_floor_applied":false,"formula_version":"","plan_version":null,' +
+        '"activity_multiplier":null,"targets":null,' +
+        '"inputs":{"sex":"male","age":null,"height_cm":178.0,"weight_kg":null,"activity_level":"moderate","goal_kind":"lose","target_weight_kg":null},' +
+        '"environment":"live"}',
+    );
+    const plan = await client.nutrition.plan();
+    expect(plan.ready).toBe(false);
+    expect(plan.missing).toEqual(["date_of_birth", "current_weight_kg"]);
+    expect(plan.energy.value).toBeNull();
+    expect(plan.targets).toBeNull();
+  });
+});

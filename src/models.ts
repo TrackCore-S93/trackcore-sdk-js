@@ -709,7 +709,7 @@ export interface DayCounter {
 
 export type Sex = "male" | "female";
 export type ActivityLevel = "sedentary" | "light" | "moderate" | "very" | "extra";
-export type GoalKind = "lose" | "maintain" | "gain";
+export type GoalKind = "maintain" | "lose" | "recomposition" | "gain";
 
 /** The end user's nutrition profile. Every attribute is null until given. */
 /**
@@ -757,17 +757,93 @@ export interface Profile {
 }
 
 /** BMR and TDEE. The targets are null and named in `undecided_fields`. */
-export interface CalculateResult {
-  readonly bmr: { readonly value: Decimal; readonly unit: "kcal" };
-  readonly tdee: { readonly value: Decimal; readonly unit: "kcal" };
-  readonly energy: { readonly value: null; readonly unit: "kcal" };
-  readonly protein: { readonly value: null; readonly unit: "g" };
-  readonly carbohydrate: { readonly value: null; readonly unit: "g"; readonly basis?: "total" };
-  readonly fat: { readonly value: null; readonly unit: "g" };
+/** A figure in kcal; `value` is null when it was not computed. */
+export interface PlanKcal {
+  readonly value: Decimal | null;
+  readonly unit: "kcal";
+}
+
+/** A figure in grams; `value` is null when it was not computed. */
+export interface PlanGram {
+  readonly value: Decimal | null;
+  readonly unit: "g";
+  /** On carbohydrate only. */
+  readonly basis?: "total";
+}
+
+/** The macro split as whole percentages of the energy target. They sum to 100. */
+export interface MacroSplit {
+  readonly protein: number;
+  readonly carbohydrate: number;
+  readonly fat: number;
+}
+
+/**
+ * The figures of a calculation: BMR and TDEE, and the daily targets
+ * downstream of them. Whatever was not computed is `null`, never zero.
+ */
+export interface PlanFigures {
+  readonly bmr: PlanKcal;
+  readonly tdee: PlanKcal;
+  /** The daily energy target, whole kcal, after the floor. */
+  readonly energy: PlanKcal;
+  readonly protein: PlanGram;
+  readonly carbohydrate: PlanGram;
+  readonly fat: PlanGram;
+  /** `energy` minus `tdee`, signed: the deficit or surplus the plan runs. */
+  readonly daily_energy_delta: PlanKcal;
+  readonly macro_split: MacroSplit | null;
+  /** Kilograms a week the delta implies, signed. */
+  readonly weekly_weight_change_kg: Decimal | null;
   readonly estimated_days_to_goal: number | null;
+  /** `true` when the minimum daily energy was used instead of the goal's delta. */
+  readonly energy_floor_applied: boolean;
   readonly formula_version: string;
-  readonly activity_multiplier: Decimal;
+  /** The rules behind the targets. Store it as a goal's `formulaVersion`. */
+  readonly plan_version: string | null;
+  readonly activity_multiplier: Decimal | null;
+}
+
+/** `POST /v1/nutrition/calculate`: a calculation over the numbers sent. */
+export interface CalculateResult extends PlanFigures {
+  /** The goal the targets were worked out for, null when none was sent. */
+  readonly goal: GoalKind | null;
+  /** The figures that are null because no goal was sent. Empty with one. */
   readonly undecided_fields: readonly string[];
+  readonly environment: "test" | "live";
+}
+
+/** What a plan read worked from. Pass it on as a goal's `inputs`. */
+export interface PlanInputs {
+  readonly sex: Sex | null;
+  readonly age: number | null;
+  readonly height_cm: Decimal | null;
+  readonly weight_kg: Decimal | null;
+  readonly activity_level: ActivityLevel | null;
+  readonly goal_kind: GoalKind | null;
+  readonly target_weight_kg: Decimal | null;
+}
+
+/**
+ * `GET /v1/nutrition/plan`: one end user's daily targets, worked out from
+ * their stored profile and current weight, or what is missing before they
+ * can be.
+ */
+export interface NutritionPlan extends PlanFigures {
+  readonly external_id: string;
+  /** `false` when the profile lacks something; the figures are then null. */
+  readonly ready: boolean;
+  readonly missing: readonly (
+    | "sex"
+    | "date_of_birth"
+    | "height_cm"
+    | "current_weight_kg"
+    | "activity_level"
+    | "goal_kind"
+  )[];
+  /** The plan as a goal's `targets`, ready for `diary.setGoal`. Null until ready. */
+  readonly targets: Readonly<Record<string, { readonly value: Decimal; readonly unit: string; readonly basis?: string }>> | null;
+  readonly inputs: PlanInputs;
   readonly environment: "test" | "live";
 }
 

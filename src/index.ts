@@ -166,7 +166,7 @@ export type {
   GoalParams,
 } from "./resources/diary.js";
 export type { ProfilePatch, ProfileReadOptions } from "./resources/profile.js";
-export type { CalculateParams } from "./resources/nutrition.js";
+export type { CalculateParams, PlanReadOptions } from "./resources/nutrition.js";
 export type {
   HealthRecordInput,
   LogHealthParams,
@@ -209,6 +209,10 @@ export type {
   OwnFoodSearchResults,
   OwnFoodSearchResult,
   CalculateResult,
+  MacroSplit,
+  NutritionPlan,
+  PlanFigures,
+  PlanInputs,
   HealthPlatform,
   HealthSource,
   HealthRejectionCode,

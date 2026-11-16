@@ -54,6 +54,7 @@ import type {
   ErasureReceipt,
   Card,
   OwnFoodSearchResults,
+  NutritionPlan,
 } from "./models.js";
 
 /**
@@ -111,7 +112,13 @@ const INTEGER_FIELDS: ReadonlySet<string> = new Set([
  * (`deleted` is also a boolean on `DeletionReceipt`; only the object form is
  * walked here.)
  */
-const INTEGER_MAPS: ReadonlySet<string> = new Set(["deleted"]);
+const INTEGER_MAPS: ReadonlySet<string> = new Set([
+  "deleted",
+  // A plan's macro split: whole percentages keyed by macro. The same keys
+  // are nutrient objects everywhere else, which is why this is a map rule
+  // and not three more field names.
+  "macro_split",
+]);
 
 function isDecimalLike(value: unknown): value is Decimal {
   return typeof value === "object" && value !== null && "source" in value && "toInt" in value;
@@ -178,6 +185,7 @@ export const decodeErasureReceipt = (body: JsonValue): ErasureReceipt => decode<
 export const decodeGoal = (body: JsonValue): Goal => decode<Goal>(body);
 export const decodeProfile = (body: JsonValue): Profile => decode<Profile>(body);
 export const decodeCalculateResult = (body: JsonValue): CalculateResult => decode<CalculateResult>(body);
+export const decodeNutritionPlan = (body: JsonValue): NutritionPlan => decode<NutritionPlan>(body);
 export const decodeHealthUploadResult = (body: JsonValue): HealthUploadResult => decode<HealthUploadResult>(body);
 export const decodeHealthRecords = (body: JsonValue): HealthRecords => decode<HealthRecords>(body);
 export const decodeHealthDeleteResult = (body: JsonValue): HealthDeleteResult => decode<HealthDeleteResult>(body);

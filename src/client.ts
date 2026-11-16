@@ -55,7 +55,7 @@ import {
 import { createSession, type CreateSessionParams } from "./resources/auth.js";
 import { eraseUser, type EraseUserOptions } from "./resources/users.js";
 import { getProfile, setProfile, type ProfilePatch, type ProfileReadOptions } from "./resources/profile.js";
-import { calculateTargets, type CalculateParams } from "./resources/nutrition.js";
+import { calculateTargets, readPlan, type CalculateParams, type PlanReadOptions } from "./resources/nutrition.js";
 import {
   logHealthRecords,
   listHealthRecords,
@@ -71,6 +71,7 @@ import type {
   Goal,
   Profile,
   CalculateResult,
+  NutritionPlan,
   HealthUploadResult,
   HealthRecords,
   HealthDeleteResult,
@@ -409,11 +410,16 @@ export class TrackCore {
 
   readonly nutrition = {
     /**
-     * `POST /v1/nutrition/calculate`. BMR and TDEE from the numbers sent; the
-     * daily targets come back null and are named in `undecided_fields`. Set
-     * them with `diary.setGoal`. See {@link calculateTargets}.
+     * `POST /v1/nutrition/calculate`. BMR and TDEE from the numbers sent and,
+     * with a `goal`, the daily targets. See {@link calculateTargets}.
      */
     calculate: (params: CalculateParams): Promise<CalculateResult> => calculateTargets(this, params),
+    /**
+     * `GET /v1/nutrition/plan`. This end user's daily targets from their
+     * stored profile and current weight, or `ready: false` with what is
+     * missing. Store them with `diary.setGoal`. See {@link readPlan}.
+     */
+    plan: (options?: PlanReadOptions): Promise<NutritionPlan> => readPlan(this, options),
   };
 
   /**

@@ -1,4 +1,5 @@
 import { decodeCard, decodeCardList, decodeCopyResult, decodeDailyNutrition, decodeDeletionReceipt, decodeDiaryMeal, decodeDiaryMeals, decodeDiaryRange, decodeGoal, decodeLoggedFood, decodeOwnFoodSearchResults, decodeReorderResult } from "../decode.js";
+import { Decimal } from "../decimal.js";
 import type { HasTransport } from "./foods";
 import { decimalOrNull } from "./profile.js";
 import type {
@@ -501,14 +502,22 @@ export interface SetGoalParams {
    * The nutrient targets in the wire form: `{ energy: { value: 2200, unit:
    * "kcal" }, protein: { value: 120, unit: "g" } }`. Every key must be a
    * catalogue nutrient and every value a JSON number. Replaced as a set when
-   * given; omitted keeps the targets in force; `null` clears them.
+   * given; omitted keeps the targets in force; `null` clears them. A plan's
+   * `targets` from `nutrition.plan()` goes here unchanged.
    */
-  readonly targets?: Readonly<Record<string, { readonly value: number | string; readonly unit?: string }>> | null | undefined;
+  readonly targets?:
+    | Readonly<Record<string, { readonly value: number | string | Decimal; readonly unit?: string }>>
+    | null
+    | undefined;
   /** IANA zone. Decides which local day "from today forward" means. Required. */
   readonly timezone: string;
-  /** Where the numbers came from. Omitted is recorded as `user_customised`. */
-  readonly formulaVersion?: string | undefined;
-  readonly inputs?: Readonly<Record<string, unknown>> | null | undefined;
+  /**
+   * Where the numbers came from: a plan's `plan_version`, for instance.
+   * Omitted or `null` is recorded as `user_customised`.
+   */
+  readonly formulaVersion?: string | null | undefined;
+  /** What the numbers were computed from: a plan's `inputs`, for instance. */
+  readonly inputs?: object | null | undefined;
   /**
    * The day's calorie target in kcal, a shorthand for `targets.energy`. Set,
    * it wins over `targets.energy` in the same call; omitted keeps the one in
@@ -547,11 +556,14 @@ export async function setGoal(client: HasTransport, params: SetGoalParams): Prom
   } else if (params.targets !== undefined) {
     const targets: Record<string, unknown> = {};
     for (const [code, target] of Object.entries(params.targets)) {
-      targets[code] = { value: decimalOrNull(target.value), unit: target.unit };
+      const value = target.value instanceof Decimal ? target.value : decimalOrNull(target.value);
+      targets[code] = { value, unit: target.unit };
     }
     body["targets"] = targets;
   }
-  if (params.formulaVersion !== undefined) body["formula_version"] = params.formulaVersion;
+  if (params.formulaVersion !== undefined && params.formulaVersion !== null) {
+    body["formula_version"] = params.formulaVersion;
+  }
   if (params.inputs !== undefined) body["inputs"] = params.inputs;
   if (params.calories !== undefined) body["calories"] = params.calories === null ? null : decimalOrNull(params.calories);
   if (params.waterMl !== undefined) body["water_ml"] = params.waterMl;
