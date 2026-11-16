@@ -216,6 +216,45 @@ describe("timeouts and cancellation", () => {
     ).rejects.toThrowError(TimeoutError);
   });
 
+  it("a timeout is a TimeoutError and is retried even when fetch rejects with the SDK's own AbortError", async () => {
+    // The React Native adapter rejected an aborted attempt with this SDK's
+    // AbortError class. With no caller signal that is the transport's own
+    // timer, so it must be a timeout under the retry policy, not a
+    // cancellation thrown at once.
+    let attempts = 0;
+    const hangs: FetchLike = (_url, init) =>
+      new Promise((_resolve, reject) => {
+        attempts++;
+        init.signal?.addEventListener("abort", () => reject(new AbortError()));
+      });
+    const t = transport(hangs, { timeoutMs: 5, deadlineMs: 2_000, sleep: async () => {}, retry: { maxAttempts: 3 } });
+    await expect(t.request({ path: "/healthz" })).rejects.toThrowError(TimeoutError);
+    expect(attempts).toBe(3);
+
+    // The same fetch with a caller signal that has NOT fired is still a timeout.
+    attempts = 0;
+    const idle = new AbortController();
+    await expect(t.request({ path: "/healthz", signal: idle.signal })).rejects.toThrowError(TimeoutError);
+    expect(attempts).toBe(3);
+  });
+
+  it("the caller's abort is an AbortError whatever class fetch rejects with", async () => {
+    let attempts = 0;
+    const hangs: FetchLike = (_url, init) =>
+      new Promise((_resolve, reject) => {
+        attempts++;
+        init.signal?.addEventListener("abort", () => reject(new AbortError()));
+      });
+    const controller = new AbortController();
+    const promise = transport(hangs, { timeoutMs: 5_000, retry: { maxAttempts: 3 } }).request({
+      path: "/healthz",
+      signal: controller.signal,
+    });
+    controller.abort();
+    await expect(promise).rejects.toThrowError(AbortError);
+    expect(attempts).toBe(1);
+  });
+
   it("the overall deadline stops a retry loop", async () => {
     // The captured 503 carries retry_after_seconds: 600 in its body and, here,
     // no `Retry-After` header — which is what a header-normalising proxy

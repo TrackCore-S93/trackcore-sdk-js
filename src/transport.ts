@@ -527,7 +527,16 @@ function isAbort(cause: unknown): boolean {
   );
 }
 
+/**
+ * Did the **caller** cancel? Only their own signal can say so.
+ *
+ * The error's type is not evidence. A `fetch` implementation may reject an
+ * aborted request with this SDK's own `AbortError` class, and the React
+ * Native adapter did exactly that when the transport's per-attempt timer
+ * fired: the timeout was then read as a caller cancellation, thrown as
+ * `AbortError` at once, and never retried. An abort with no caller signal, or
+ * with one that has not fired, is the transport's own timeout.
+ */
 function isCallerAbort(cause: unknown, signal: AbortSignal | undefined): boolean {
-  if (cause instanceof AbortError) return true;
-  return signal?.aborted === true && isAbort(cause);
+  return signal?.aborted === true && (cause instanceof AbortError || isAbort(cause));
 }
