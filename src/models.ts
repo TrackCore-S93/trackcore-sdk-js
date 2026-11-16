@@ -721,7 +721,15 @@ export type GoalKind = "lose" | "maintain" | "gain";
 export interface ProfileOnboarding {
   readonly completed: boolean;
   readonly completed_at: Timestamp | null;
-  readonly missing: readonly ("sex" | "date_of_birth" | "height_cm" | "activity_level" | "goal_kind" | "target_weight_kg")[];
+  readonly missing: readonly (
+    | "sex"
+    | "date_of_birth"
+    | "height_cm"
+    | "current_weight_kg"
+    | "activity_level"
+    | "goal_kind"
+    | "target_weight_kg"
+  )[];
 }
 
 export interface Profile {

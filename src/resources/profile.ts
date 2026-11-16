@@ -33,6 +33,19 @@ export interface ProfilePatch {
   /** Kilograms. */
   readonly targetWeightKg?: string | number | null | undefined;
   /**
+   * The weight the end user typed, in kilograms, stored to one decimal and
+   * dated with today. Kept on the profile, so an onboarding flow can save it
+   * without the health entitlement; `null` clears it. Read it back as
+   * `profile.current_weight_kg`, which reports the newer of this and the
+   * latest `body_mass` health record.
+   */
+  readonly currentWeightKg?: string | number | null | undefined;
+  /**
+   * IANA zone that decides which local day a typed weight is dated with.
+   * Omitted is UTC.
+   */
+  readonly timezone?: string | undefined;
+  /**
    * `true` marks the app's onboarding flow complete for this end user,
    * stamping the time; `false` or `null` clears the mark. Stated by the app,
    * never inferred by the server. Read it back as `profile.onboarding`.
@@ -65,10 +78,12 @@ export async function setProfile(client: HasTransport, patch: ProfilePatch): Pro
   if (patch.activityLevel !== undefined) body["activity_level"] = patch.activityLevel;
   if (patch.goalKind !== undefined) body["goal_kind"] = patch.goalKind;
   if (patch.targetWeightKg !== undefined) body["target_weight_kg"] = decimalOrNull(patch.targetWeightKg);
+  if (patch.currentWeightKg !== undefined) body["current_weight_kg"] = decimalOrNull(patch.currentWeightKg);
   if (patch.onboardingCompleted !== undefined) body["onboarding_completed"] = patch.onboardingCompleted;
   const response = await client.transport.request({
     method: "PUT",
     path: "/v1/profile",
+    ...(patch.timezone === undefined ? {} : { query: { timezone: patch.timezone } }),
     body,
     signal: patch.signal,
   });

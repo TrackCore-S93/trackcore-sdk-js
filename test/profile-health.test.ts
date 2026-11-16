@@ -62,6 +62,18 @@ describe("profile", () => {
     expect(profile.current_weight_kg?.measured_on).toBe("2026-11-10");
   });
 
+  it("sends a typed current weight as a bare number, with the zone that dates it", async () => {
+    const { client, sent } = server(PROFILE);
+    const profile = await client.profile.set({ currentWeightKg: "72.4", timezone: "Europe/London" });
+    expect(sent[0]!.url).toContain("/v1/profile?timezone=Europe%2FLondon");
+    expect(sent[0]!.body).toBe('{"current_weight_kg":72.4}');
+    expect(profile.current_weight_kg?.value).toEqual(new Decimal("72.4"));
+
+    await client.profile.set({ currentWeightKg: null });
+    expect(sent[1]!.url).not.toContain("timezone");
+    expect(sent[1]!.body).toBe('{"current_weight_kg":null}');
+  });
+
   it("reads with the zone that decides today", async () => {
     const { client, sent } = server(PROFILE.replace('"age":35', '"age":null'));
     const profile = await client.profile.get({ timezone: "Asia/Karachi" });
