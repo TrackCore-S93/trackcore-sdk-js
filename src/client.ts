@@ -111,15 +111,19 @@ import {
 import { extractLabel, type ExtractLabelOptions, type LabelImage } from "./resources/label.js";
 import {
   recognizeFood,
+  recognizeFoodPhotos,
   recognizeFridge,
+  recognizeFridgePhotos,
+  type PhotosRecognition,
   type RecognizeImageOptions,
+  type RecognizePhotosOptions,
 } from "./resources/image.js";
 import { searchSpeech, searchText, type SearchSpeechOptions } from "./resources/nlp.js";
 import type { JsonObject } from "./json.js";
 import type { BarcodeLookup, BatchReadResult, Food, NlpResult, SearchResults } from "./models.js";
 
 /** The SDK version, stamped into the `User-Agent`. Kept in step with package.json. */
-export const VERSION = "0.7.1";
+export const VERSION = "0.8.0";
 
 export const DEFAULT_BASE_URL = "https://api.trackcore.dev";
 
@@ -480,6 +484,17 @@ export class TrackCore {
      */
     fridge: (image: LabelImage, options?: RecognizeImageOptions): Promise<JsonObject> =>
       recognizeFridge(this, image, options),
+    /**
+     * Several photos of one meal, scanned as one result. Each photo is its
+     * own `POST /v1/image/food`, so each is its own metered scan. A photo
+     * that fails is reported in `photos` and the rest are kept; the call
+     * throws only when every photo failed. See {@link recognizeFoodPhotos}.
+     */
+    foodPhotos: (images: readonly LabelImage[], options?: RecognizePhotosOptions): Promise<PhotosRecognition> =>
+      recognizeFoodPhotos(this, images, options),
+    /** Several photos of one fridge. Same behaviour as {@link TrackCore.image.foodPhotos}. */
+    fridgePhotos: (images: readonly LabelImage[], options?: RecognizePhotosOptions): Promise<PhotosRecognition> =>
+      recognizeFridgePhotos(this, images, options),
   };
 
   readonly nlp = {

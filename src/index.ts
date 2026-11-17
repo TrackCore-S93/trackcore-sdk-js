@@ -24,7 +24,8 @@ export {
   assertValidExternalId,
 } from "./identity.js";
 export type { ExtractLabelOptions, LabelImage } from "./resources/label.js";
-export type { RecognizeImageOptions } from "./resources/image.js";
+export { MAX_PHOTOS_PER_CALL } from "./resources/image.js";
+export type { PhotoScan, PhotosRecognition, RecognizeImageOptions, RecognizePhotosOptions } from "./resources/image.js";
 export type { SearchSpeechOptions } from "./resources/nlp.js";
 
 // -- the numeric contract ---------------------------------------------------
