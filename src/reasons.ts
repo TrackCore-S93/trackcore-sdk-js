@@ -109,6 +109,7 @@ export type TrackCoreErrorReason =
   | "reveal_gone"
   | "food_withdrawn"
   | "snapshot_unavailable"
+  | "image_too_many_pixels"
   | "food_has_no_default_serving"
   | "food_has_no_servings"
   | "serving_unusable"
@@ -205,6 +206,7 @@ export const ERROR_REASONS: Readonly<Record<TrackCoreErrorReason, ErrorReasonSpe
   reveal_gone: Object.freeze({ code: "resource_not_found", status: 404, domain: "console", messageTemplate: "No secret is waiting to be revealed for this key; a secret is shown once." }),
   food_withdrawn: Object.freeze({ code: "food_gone", status: 410, domain: "foods", messageTemplate: "The provider no longer resolves this food id." }),
   snapshot_unavailable: Object.freeze({ code: "food_gone", status: 410, domain: "diary", messageTemplate: "The entry's stored food snapshot has been archived, so the portion cannot be recomputed." }),
+  image_too_many_pixels: Object.freeze({ code: "image_too_large", status: 413, domain: "image", messageTemplate: "The photo has too many pixels for the server to resize; resize it so its long side is at most 2048 pixels and send it again." }),
   food_has_no_default_serving: Object.freeze({ code: "food_unusable", status: 422, domain: "foods", messageTemplate: "This food names no default serving; send selected_serving_id." }),
   food_has_no_servings: Object.freeze({ code: "food_unusable", status: 422, domain: "foods", messageTemplate: "This food publishes no serving, so it cannot be logged or scaled." }),
   serving_unusable: Object.freeze({ code: "food_unusable", status: 422, domain: "foods", messageTemplate: "The serving's nutrition cannot be scaled." }),

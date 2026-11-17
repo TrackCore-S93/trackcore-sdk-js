@@ -677,6 +677,14 @@
       "required_fields": []
     },
     {
+      "reason": "image_too_many_pixels",
+      "code": "image_too_large",
+      "status": 413,
+      "domain": "image",
+      "message_template": "The photo has too many pixels for the server to resize; resize it so its long side is at most 2048 pixels and send it again.",
+      "required_fields": []
+    },
+    {
       "reason": "food_has_no_default_serving",
       "code": "food_unusable",
       "status": 422,
