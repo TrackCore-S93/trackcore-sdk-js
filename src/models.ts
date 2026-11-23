@@ -236,6 +236,41 @@ export interface Serving {
 }
 
 /**
+ * One unit an end user can pick for a food, sized to **one of it**: a gram, a
+ * millilitre, an ounce, a slice, a cup. `Food.measurements` is the serving
+ * list as an app shows it: one entry per unit, short names, whole portions,
+ * in display order.
+ *
+ * To log one, send `serving_id` as `selectedServingId` and
+ * `amount × consumed_quantity_per_unit` as `consumedQuantity`, rounded to four
+ * decimals. {@link consumedQuantityFor} does the arithmetic exactly. The
+ * factor is 1 on almost every entry and not on all of them: a `100 g` serving
+ * whose `base_quantity` is 1 logs a gram as 0.01.
+ */
+export interface Measurement {
+  /** `g`, `ml`, `oz`, or the head of the provider's wording: `small`, `cup cooked`. */
+  readonly label: string;
+  /** The rest of the provider's wording, `null` when the label is all there was. */
+  readonly detail: string | null;
+  /** `weight` and `volume` take any amount; a `portion` is counted. */
+  readonly kind: "weight" | "volume" | "portion";
+  /** The serving to log against. Several entries may share one. */
+  readonly serving_id: ServingId;
+  /** The diary's `consumed_quantity` for one of this unit. */
+  readonly consumed_quantity_per_unit: Decimal;
+  /** The amount to start from: 100 for `g` and `ml` as a rule, 1 for a portion. */
+  readonly default_amount: Decimal;
+  /** What one of the unit weighs in grams. `null` where the provider states no weight. */
+  readonly weight_g: Decimal | null;
+  /** What one of the unit holds in millilitres. `null` where the provider states no volume. */
+  readonly volume_ml: Decimal | null;
+  /** `true` on exactly one entry, the first. */
+  readonly is_default: boolean;
+  /** For one of the unit, unrounded: a gram of chicken breast is 1.95 kcal. */
+  readonly nutrition: NutritionDocument;
+}
+
+/**
  * DM-F6: all four `food_type` values return the **same JSON shape**. One parser
  * serves search, barcode, NLP, image recognition and label scan results, and
  * every key is present on every food — a client that has to check which keys
@@ -250,6 +285,12 @@ export interface Food {
   readonly servings: readonly Serving[];
   /** A hint for which serving to preselect. Never a restriction (DM-S1). */
   readonly default_serving_id: ServingId | null;
+  /**
+   * The serving list as an app shows it, in display order: take the first few.
+   * Empty only where `servings` is. Absent from a `food_snapshot` stored
+   * before the field existed, which is the one place to guard for it.
+   */
+  readonly measurements: readonly Measurement[];
   readonly data_quality: DataQuality;
   readonly ingredients: readonly Readonly<Record<string, unknown>>[] | null;
   readonly directions: readonly string[] | null;

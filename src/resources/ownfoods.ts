@@ -1,3 +1,4 @@
+import type { Decimal } from "../decimal.js";
 import { decodeDeletionReceipt, decodeFood } from "../decode.js";
 import type { HasTransport } from "./foods";
 import type { Food, DeletionReceipt } from "../models";
@@ -99,7 +100,7 @@ export interface RecipeIngredient {
   readonly foodId: string;
   readonly servingId: string;
   /** How many of that serving goes into the recipe. */
-  readonly quantity: number | string;
+  readonly quantity: number | string | Decimal;
   readonly note?: string | undefined;
 }
 

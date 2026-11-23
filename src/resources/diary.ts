@@ -125,7 +125,7 @@ export interface LogFoodParams {
    * `base_quantity`, which is how many the serving's nutrition describes —
    * merging the two is how `grounds` arrived at silent zero nutrition (P-004).
    */
-  readonly consumedQuantity: number | string;
+  readonly consumedQuantity: number | string | Decimal;
   /** RFC 3339, when the food was eaten. Omitted means now. */
   readonly eatenAt?: string | undefined;
   /** `YYYY-MM-DD` in `timezone`. Omitted is derived from `eatenAt`. */
@@ -176,7 +176,7 @@ export async function logFood(client: HasTransport, params: LogFoodParams): Prom
 
 export interface EditPortionParams {
   readonly entryId: string;
-  readonly consumedQuantity?: number | string | undefined;
+  readonly consumedQuantity?: number | string | Decimal | undefined;
   readonly selectedServingId?: string | undefined;
   /**
    * A new answer to how the food was cooked, or `null` to clear the stored

@@ -37,7 +37,7 @@ package as a tarball, and npm, Bun, pnpm and yarn all install it from the URL
 (yarn 2 and later want the package name in front of it):
 
 ```sh
-npm install https://github.com/TrackCore-S93/trackcore-sdk-js/releases/download/v0.8.0/trackcore-sdk-0.8.0.tgz
+npm install https://github.com/TrackCore-S93/trackcore-sdk-js/releases/download/v0.9.0/trackcore-sdk-0.9.0.tgz
 bun add https://github.com/TrackCore-S93/trackcore-sdk-js/releases/download/v0.3.1/trackcore-sdk-0.3.1.tgz
 pnpm add https://github.com/TrackCore-S93/trackcore-sdk-js/releases/download/v0.3.1/trackcore-sdk-0.3.1.tgz
 yarn add https://github.com/TrackCore-S93/trackcore-sdk-js/releases/download/v0.3.1/trackcore-sdk-0.3.1.tgz            # yarn 1
@@ -574,6 +574,39 @@ for (const id of missing) {
 
 Likewise, a search that matched nothing is a `200` with `results: []`, and an
 outage is a `502`. The two are never confused (US-10).
+
+### Showing a food's units: `measurements`
+
+`food.servings` is every portion the provider publishes, in the provider's
+words. `food.measurements` is the same food as the short row of choices an app
+shows: grams, millilitres where the provider states a volume, ounces, then the
+food's own portions. One entry per unit, a short `label`, sized to one whole
+unit, in display order.
+
+```ts
+const food = await trackcore.foods.get(foodId);
+const chips = food.measurements.slice(0, 5);        // already in display order
+const picked = chips.find((m) => m.is_default)!;    // the one to open on
+
+await trackcore.diary.log({
+  foodId: food.food_id,
+  selectedServingId: picked.serving_id,
+  consumedQuantity: consumedQuantityFor(picked, amountTyped),
+  timezone,
+});
+```
+
+`consumedQuantityFor(measurement, amount)` is `amount ×
+consumed_quantity_per_unit`, rounded to the four decimals the diary stores, in
+exact decimal arithmetic. It returns a `Decimal`, which is sent as a bare JSON
+number. Use it rather than sending the amount: the factor is
+1 on most entries and not on all of them. A `100 g` serving that the provider
+counts as one logs a gram as `0.01`.
+
+`measurement.nutrition` is for one of the unit, unrounded: a gram of chicken
+breast is 1.95 kcal. The SDK still does no nutrient arithmetic. For the exact
+figure an amount will be stored as, ask the server: `POST /v1/foods/scale` with
+the same serving and quantity.
 
 ---
 
