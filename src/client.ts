@@ -33,6 +33,7 @@ import {
   removeFavourite,
   listRecents,
   searchOwnFoods,
+  listOwnFoods,
   setGoal,
   getGoal,
   type SetGoalParams,
@@ -44,12 +45,15 @@ import {
   type CreateMealParams,
   type EditMealParams,
   type CopyParams,
+  type ListOwnFoodsParams,
 } from "./resources/diary.js";
 import {
   createCustomFood,
+  updateCustomFood,
   deleteCustomFood,
   createRecipe,
   type CreateCustomFoodParams,
+  type UpdateCustomFoodParams,
   type CreateRecipeParams,
 } from "./resources/ownfoods.js";
 import { createSession, type CreateSessionParams } from "./resources/auth.js";
@@ -86,6 +90,7 @@ import type {
   Card,
   CardList,
   OwnFoodSearchResults,
+  OwnFoodPage,
   DeletionReceipt,
   ReorderResult,
   CopyResult,
@@ -123,7 +128,7 @@ import type { JsonObject } from "./json.js";
 import type { BarcodeLookup, BatchReadResult, Food, NlpResult, SearchResults } from "./models.js";
 
 /** The SDK version, stamped into the `User-Agent`. Kept in step with package.json. */
-export const VERSION = "0.9.0";
+export const VERSION = "0.10.0";
 
 export const DEFAULT_BASE_URL = "https://api.trackcore.dev";
 
@@ -313,6 +318,9 @@ export class TrackCore {
     custom: {
       /** `POST /v1/foods/custom`. See {@link createCustomFood}. */
       create: (params: CreateCustomFoodParams): Promise<Food> => createCustomFood(this, params),
+      /** `PATCH /v1/foods/custom/{food_id}`. See {@link updateCustomFood}. */
+      update: (foodId: string, params: UpdateCustomFoodParams): Promise<Food> =>
+        updateCustomFood(this, foodId, params),
       /** `DELETE /v1/foods/custom/{food_id}`. See {@link deleteCustomFood}. */
       delete: (foodId: string, options?: { signal?: AbortSignal }): Promise<DeletionReceipt> =>
         deleteCustomFood(this, foodId, options),
@@ -375,6 +383,8 @@ export class TrackCore {
     /** `GET /v1/diary/foods/search`. The end user's own foods, not the provider's. */
     searchOwnFoods: (params: { q: string; limit?: number; signal?: AbortSignal }): Promise<OwnFoodSearchResults> =>
       searchOwnFoods(this, params),
+    /** `GET /v1/diary/foods`. Every food the end user made, a page at a time. See {@link listOwnFoods}. */
+    listOwnFoods: (params?: ListOwnFoodsParams): Promise<OwnFoodPage> => listOwnFoods(this, params),
     /**
      * `PUT /v1/diary/goal`. The daily targets your app sets: nutrients, water
      * and steps. Applies from today forward only. See {@link setGoal}.

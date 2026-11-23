@@ -1,4 +1,4 @@
-import { decodeCard, decodeCardList, decodeCopyResult, decodeDailyNutrition, decodeDeletionReceipt, decodeDiaryMeal, decodeDiaryMeals, decodeDiaryRange, decodeGoal, decodeLoggedFood, decodeOwnFoodSearchResults, decodeReorderResult } from "../decode.js";
+import { decodeCard, decodeCardList, decodeCopyResult, decodeDailyNutrition, decodeDeletionReceipt, decodeDiaryMeal, decodeDiaryMeals, decodeDiaryRange, decodeGoal, decodeLoggedFood, decodeOwnFoodPage, decodeOwnFoodSearchResults, decodeReorderResult } from "../decode.js";
 import { Decimal } from "../decimal.js";
 import type { HasTransport } from "./foods";
 import { decimalOrNull } from "./profile.js";
@@ -12,6 +12,7 @@ import type {
   CardList,
   LoggedFood,
   OwnFoodSearchResults,
+  OwnFoodPage,
   DiaryMeal,
   DeletionReceipt,
   ReorderResult,
@@ -491,6 +492,42 @@ export async function searchOwnFoods(
     signal: params.signal,
   });
   return decodeOwnFoodSearchResults(response.body);
+}
+
+export interface ListOwnFoodsParams {
+  /** How many foods one page holds: 1 to 50. The server's default is 10. */
+  readonly limit?: number | undefined;
+  /** The `next_cursor` of the page before. Leave it out for the first page. */
+  readonly cursor?: string | undefined;
+  /** Narrows the list to one kind. Left out, both are listed. */
+  readonly type?: "custom_food" | "recipe" | undefined;
+  readonly signal?: AbortSignal | undefined;
+}
+
+/**
+ * `GET /v1/diary/foods` — every food the end user made, newest first.
+ *
+ * No search term, so this is the list a "My foods" screen shows before anybody
+ * has typed anything. Custom foods and recipes together.
+ *
+ * **Each food is whole**: the same `Food` that `foods.get` returns, with its
+ * servings, nutrition and `measurements`. A row needs no second read.
+ *
+ * Page with the cursor: pass a page's `next_cursor` back as `cursor`. It is
+ * `null` on the last page. A food created or deleted between two pages neither
+ * repeats a row nor skips one.
+ */
+export async function listOwnFoods(
+  client: HasTransport,
+  params: ListOwnFoodsParams = {},
+): Promise<OwnFoodPage> {
+  const response = await client.transport.request({
+    method: "GET",
+    path: "/v1/diary/foods",
+    query: { limit: params.limit, cursor: params.cursor, type: params.type },
+    signal: params.signal,
+  });
+  return decodeOwnFoodPage(response.body);
 }
 
 // ---------------------------------------------------------------------------

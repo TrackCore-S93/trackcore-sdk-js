@@ -143,6 +143,22 @@
       "required_fields": []
     },
     {
+      "reason": "cursor_invalid",
+      "code": "invalid_request",
+      "status": 400,
+      "domain": "platform",
+      "message_template": "cursor is not one this list returned.",
+      "required_fields": []
+    },
+    {
+      "reason": "custom_food_edit_empty",
+      "code": "invalid_request",
+      "status": 400,
+      "domain": "foods",
+      "message_template": "The request changes nothing: send a name, a brand, an image_url, servings or a default_serving_id.",
+      "required_fields": []
+    },
+    {
       "reason": "date_invalid",
       "code": "invalid_request",
       "status": 400,
@@ -201,6 +217,16 @@
       "domain": "diary",
       "message_template": "food_id is required.",
       "required_fields": []
+    },
+    {
+      "reason": "food_image_url_invalid",
+      "code": "invalid_request",
+      "status": 400,
+      "domain": "foods",
+      "message_template": "image_url must be an https link of at most {limit} characters.",
+      "required_fields": [
+        "limit"
+      ]
     },
     {
       "reason": "goal_calories_invalid",
@@ -382,6 +408,16 @@
       "required_fields": []
     },
     {
+      "reason": "name_too_long",
+      "code": "invalid_request",
+      "status": 400,
+      "domain": "foods",
+      "message_template": "name may be at most {limit} characters.",
+      "required_fields": [
+        "limit"
+      ]
+    },
+    {
       "reason": "nutrient_not_live",
       "code": "invalid_request",
       "status": 400,
@@ -436,6 +472,14 @@
       ]
     },
     {
+      "reason": "recipe_not_editable",
+      "code": "invalid_request",
+      "status": 400,
+      "domain": "foods",
+      "message_template": "A recipe cannot be edited: its nutrition is computed from its ingredients.",
+      "required_fields": []
+    },
+    {
       "reason": "records_empty",
       "code": "invalid_request",
       "status": 400,
@@ -449,6 +493,14 @@
       "status": 400,
       "domain": "image",
       "message_template": "region must be two letters.",
+      "required_fields": []
+    },
+    {
+      "reason": "serving_listed_twice",
+      "code": "invalid_request",
+      "status": 400,
+      "domain": "foods",
+      "message_template": "A serving_id appears more than once in servings.",
       "required_fields": []
     },
     {

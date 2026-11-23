@@ -1,5 +1,6 @@
 import type { Decimal } from "../decimal.js";
 import { decodeDeletionReceipt, decodeFood } from "../decode.js";
+import { ValidationError } from "../errors.js";
 import type { HasTransport } from "./foods";
 import type { Food, DeletionReceipt } from "../models";
 
@@ -25,6 +26,12 @@ import type { Food, DeletionReceipt } from "../models";
  */
 
 export interface CustomServing {
+  /**
+   * **For an edit only.** In `foods.custom.update` it says which of the food's
+   * servings this one replaces, and that serving keeps its id. Leave it out
+   * for a serving that is new. `foods.custom.create` ignores it.
+   */
+  readonly servingId?: string | undefined;
   readonly description: string;
   /** How many of this serving the `nutrition` below describes. Usually 1. */
   readonly baseQuantity: number | string;
@@ -43,6 +50,12 @@ export interface CustomServing {
 export interface CreateCustomFoodParams {
   readonly name: string;
   readonly brand?: string | null | undefined;
+  /**
+   * An `https` link to a photo of the food, hosted by you. TrackCore keeps the
+   * link and returns it as `food.image_url`; it stores no image and never
+   * fetches this one. Anything else is `400 food_image_url_invalid`.
+   */
+  readonly imageUrl?: string | null | undefined;
   readonly servings: readonly CustomServing[];
   readonly defaultServingId?: string | undefined;
   readonly signal?: AbortSignal | undefined;
@@ -59,19 +72,92 @@ export async function createCustomFood(
     body: {
       name: params.name,
       brand: params.brand ?? null,
+      image_url: params.imageUrl ?? null,
       default_serving_id: params.defaultServingId,
-      servings: params.servings.map((serving) => ({
-        description: serving.description,
-        base_quantity: serving.baseQuantity,
-        household_unit: serving.householdUnit,
-        metric_amount: serving.metricAmount,
-        metric_unit: serving.metricUnit,
-        gram_weight_per_household_unit: serving.gramWeightPerHouseholdUnit,
-        is_metric_default: serving.isMetricDefault,
-        carbohydrate_basis: serving.carbohydrateBasis,
-        nutrition: serving.nutrition,
-      })),
+      servings: params.servings.map(servingBody),
     },
+    signal: params.signal,
+  });
+  return decodeFood(response.body);
+}
+
+/** One serving as the API reads it. A key left `undefined` is not sent. */
+function servingBody(serving: CustomServing): Record<string, unknown> {
+  return {
+    serving_id: serving.servingId,
+    description: serving.description,
+    base_quantity: serving.baseQuantity,
+    household_unit: serving.householdUnit,
+    metric_amount: serving.metricAmount,
+    metric_unit: serving.metricUnit,
+    gram_weight_per_household_unit: serving.gramWeightPerHouseholdUnit,
+    is_metric_default: serving.isMetricDefault,
+    carbohydrate_basis: serving.carbohydrateBasis,
+    nutrition: serving.nutrition,
+  };
+}
+
+export interface UpdateCustomFoodParams {
+  readonly name?: string | undefined;
+  /** `null` removes the brand. Left out, the brand is not touched. */
+  readonly brand?: string | null | undefined;
+  /** `null` removes the photo. Left out, the photo is not touched. */
+  readonly imageUrl?: string | null | undefined;
+  /**
+   * **The whole list, in the order to show it.** It replaces the list the food
+   * has. Give a serving the `servingId` it already has and it keeps that id; a
+   * serving with none is new; a serving the food had that is not in the list
+   * is removed.
+   */
+  readonly servings?: readonly CustomServing[] | undefined;
+  /** Must be one of the servings the food has once this edit is applied. */
+  readonly defaultServingId?: string | undefined;
+  readonly signal?: AbortSignal | undefined;
+}
+
+/**
+ * `PATCH /v1/foods/custom/{food_id}` — change a custom food after it was saved.
+ *
+ * **Only what you pass changes.** `{ name: "Protein bar" }` moves the name and
+ * nothing else. Leaving a key out is not the same as passing `null`:
+ * `brand: null` removes the brand.
+ *
+ * Diary entries already logged keep the numbers they were logged with: an
+ * entry stores a copy of the food (P-002). A recipe that uses the food keeps
+ * the nutrition it was computed with.
+ *
+ * A recipe cannot be edited here (`400 recipe_not_editable`): its nutrition is
+ * computed from its ingredients.
+ */
+export async function updateCustomFood(
+  client: HasTransport,
+  foodId: string,
+  params: UpdateCustomFoodParams,
+): Promise<Food> {
+  if (foodId === "") {
+    throw new ValidationError("foodId", "updateCustomFood: a food id is required");
+  }
+  // Built key by key, so a key that was not passed is not in the body at all.
+  // `undefined` would be dropped by the encoder anyway; `null` must survive,
+  // because it is how a brand or a photo is removed.
+  const body: Record<string, unknown> = {};
+  if (params.name !== undefined) body["name"] = params.name;
+  if (params.brand !== undefined) body["brand"] = params.brand;
+  if (params.imageUrl !== undefined) body["image_url"] = params.imageUrl;
+  if (params.servings !== undefined) body["servings"] = params.servings.map(servingBody);
+  if (params.defaultServingId !== undefined) body["default_serving_id"] = params.defaultServingId;
+  if (Object.keys(body).length === 0) {
+    // Caught here so it fails at the call site and not after a round trip.
+    // The server's `400 custom_food_edit_empty` remains the authority.
+    throw new ValidationError(
+      "params",
+      "updateCustomFood: nothing to change. Pass a name, a brand, an imageUrl, servings or a defaultServingId.",
+    );
+  }
+  const response = await client.transport.request({
+    method: "PATCH",
+    path: `/v1/foods/custom/${encodeURIComponent(foodId)}`,
+    body,
     signal: params.signal,
   });
   return decodeFood(response.body);

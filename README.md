@@ -37,7 +37,7 @@ package as a tarball, and npm, Bun, pnpm and yarn all install it from the URL
 (yarn 2 and later want the package name in front of it):
 
 ```sh
-npm install https://github.com/TrackCore-S93/trackcore-sdk-js/releases/download/v0.9.0/trackcore-sdk-0.9.0.tgz
+npm install https://github.com/TrackCore-S93/trackcore-sdk-js/releases/download/v0.10.0/trackcore-sdk-0.10.0.tgz
 bun add https://github.com/TrackCore-S93/trackcore-sdk-js/releases/download/v0.3.1/trackcore-sdk-0.3.1.tgz
 pnpm add https://github.com/TrackCore-S93/trackcore-sdk-js/releases/download/v0.3.1/trackcore-sdk-0.3.1.tgz
 yarn add https://github.com/TrackCore-S93/trackcore-sdk-js/releases/download/v0.3.1/trackcore-sdk-0.3.1.tgz            # yarn 1
@@ -607,6 +607,53 @@ counts as one logs a gram as `0.01`.
 breast is 1.95 kcal. The SDK still does no nutrient arithmetic. For the exact
 figure an amount will be stored as, ask the server: `POST /v1/foods/scale` with
 the same serving and quantity.
+
+### The end user's own foods: list, edit, photo
+
+`diary.listOwnFoods` is every food the end user made, custom foods and recipes
+together, newest first. It needs no search term, so it is what a "My foods"
+screen shows before anybody types.
+
+```ts
+let page = await trackcore.diary.listOwnFoods({ limit: 10 });
+show(page.foods);                                   // whole foods, measurements included
+
+while (page.next_cursor !== null) {                 // null on the last page
+  page = await trackcore.diary.listOwnFoods({ limit: 10, cursor: page.next_cursor });
+  show(page.foods);
+}
+```
+
+Each food is the same `Food` that `foods.get` returns, so a row can show a
+portion and its numbers and open a unit picker with no second read. `type`
+narrows the list to `"custom_food"` or `"recipe"`.
+
+`foods.batch` finds these foods too. With an end user set, an id that is one of
+their own comes back in `found`, beside the catalogue's.
+
+`foods.custom.update` changes a custom food after it was saved. Only what you
+pass changes; `null` removes a brand or a photo.
+
+```ts
+await trackcore.foods.custom.update(foodId, { name: "Protein bar" });
+await trackcore.foods.custom.update(foodId, { brand: null });
+
+await trackcore.foods.custom.update(foodId, {
+  servings: [
+    { servingId: food.servings[0].serving_id, description: "1 bar", baseQuantity: 1, nutrition },
+    { description: "half bar", baseQuantity: 1, nutrition: half },      // new: no servingId
+  ],
+});
+```
+
+`servings` is the whole list. A serving passed with its `servingId` keeps that
+id, one without is new, and one left out is removed. Entries already in the
+diary keep the numbers they were logged with. A recipe cannot be edited this
+way.
+
+A food can carry a photo link: pass `imageUrl` to `foods.custom.create` or
+`foods.custom.update` and read it back as `food.image_url`. It must be an
+`https` link to a photo you host. TrackCore stores the link, not the image.
 
 ---
 

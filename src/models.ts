@@ -282,6 +282,13 @@ export interface Food {
   readonly name: string;
   /** `null` for an unbranded food. Upstream sends `""`; that is absence. */
   readonly brand: string | null;
+  /**
+   * An `https` link to a photo of the food, or `null`. Only a food the end
+   * user made can carry one, set by `foods.custom.create` or
+   * `foods.custom.update`; a catalogue food is always `null`. A link only:
+   * whoever created the food hosts the photo.
+   */
+  readonly image_url: string | null;
   readonly servings: readonly Serving[];
   /** A hint for which serving to preselect. Never a restriction (DM-S1). */
   readonly default_serving_id: ServingId | null;
@@ -642,6 +649,25 @@ export interface OwnFoodSearchResult {
   readonly brand: string | null;
   readonly default_serving_id: ServingId | null;
   readonly updated_at: Timestamp;
+}
+
+/**
+ * One page of the foods an end user made, as `GET /v1/diary/foods` lists them.
+ *
+ * Each food is whole: the same {@link Food} a food read returns, with its
+ * servings, nutrition and `measurements`.
+ */
+export interface OwnFoodPage {
+  readonly external_id: string;
+  /** Newest first. */
+  readonly foods: readonly Food[];
+  /**
+   * Pass it back as `cursor` for the next page. **`null` on the last page**: a
+   * page can be full and still be the last one, so check this and not the
+   * number of foods.
+   */
+  readonly next_cursor: string | null;
+  readonly environment: "test" | "live";
 }
 
 export interface OwnFoodSearchResults {

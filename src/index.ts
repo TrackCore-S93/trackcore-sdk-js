@@ -167,6 +167,7 @@ export type {
   CopyParams,
   SetGoalParams,
   GoalParams,
+  ListOwnFoodsParams,
 } from "./resources/diary.js";
 export type { ProfilePatch, ProfileReadOptions } from "./resources/profile.js";
 export type { CalculateParams, PlanReadOptions } from "./resources/nutrition.js";
@@ -180,6 +181,7 @@ export type {
 export type {
   CustomServing,
   CreateCustomFoodParams,
+  UpdateCustomFoodParams,
   RecipeIngredient,
   CreateRecipeParams,
 } from "./resources/ownfoods.js";
@@ -211,6 +213,7 @@ export type {
   ProfileOnboarding,
   OwnFoodSearchResults,
   OwnFoodSearchResult,
+  OwnFoodPage,
   CalculateResult,
   MacroSplit,
   NutritionPlan,

@@ -47,6 +47,8 @@ export type TrackCoreErrorReason =
   | "body_not_json"
   | "body_required"
   | "capability_unknown"
+  | "cursor_invalid"
+  | "custom_food_edit_empty"
   | "date_invalid"
   | "date_required"
   | "edit_empty"
@@ -54,6 +56,7 @@ export type TrackCoreErrorReason =
   | "external_id_invalid"
   | "external_id_mismatch"
   | "food_id_required"
+  | "food_image_url_invalid"
   | "goal_calories_invalid"
   | "goal_counter_invalid"
   | "goal_empty"
@@ -75,14 +78,17 @@ export type TrackCoreErrorReason =
   | "modified_serving_conflict"
   | "modified_serving_invalid"
   | "name_required"
+  | "name_too_long"
   | "nutrient_not_live"
   | "parameter_invalid"
   | "parameter_required"
   | "partial_serving_list_refused"
   | "range_end_before_start"
   | "range_too_long"
+  | "recipe_not_editable"
   | "records_empty"
   | "region_invalid"
+  | "serving_listed_twice"
   | "serving_nutrition_invalid"
   | "serving_nutrition_unreadable"
   | "servings_count_out_of_range"
@@ -144,6 +150,8 @@ export const ERROR_REASONS: Readonly<Record<TrackCoreErrorReason, ErrorReasonSpe
   body_not_json: Object.freeze({ code: "invalid_request", status: 400, domain: "platform", messageTemplate: "The body is not readable JSON." }),
   body_required: Object.freeze({ code: "invalid_request", status: 400, domain: "platform", messageTemplate: "A JSON body is required." }),
   capability_unknown: Object.freeze({ code: "invalid_request", status: 400, domain: "console", messageTemplate: "capabilities names a code that is unknown or not yet available." }),
+  cursor_invalid: Object.freeze({ code: "invalid_request", status: 400, domain: "platform", messageTemplate: "cursor is not one this list returned." }),
+  custom_food_edit_empty: Object.freeze({ code: "invalid_request", status: 400, domain: "foods", messageTemplate: "The request changes nothing: send a name, a brand, an image_url, servings or a default_serving_id." }),
   date_invalid: Object.freeze({ code: "invalid_request", status: 400, domain: "platform", messageTemplate: "{parameter} must be a calendar date as YYYY-MM-DD." }),
   date_required: Object.freeze({ code: "invalid_request", status: 400, domain: "platform", messageTemplate: "{parameter} is required, as YYYY-MM-DD." }),
   edit_empty: Object.freeze({ code: "invalid_request", status: 400, domain: "diary", messageTemplate: "The edit changes nothing: send consumed_quantity, selected_serving_id, modified_serving or cooking_method." }),
@@ -151,6 +159,7 @@ export const ERROR_REASONS: Readonly<Record<TrackCoreErrorReason, ErrorReasonSpe
   external_id_invalid: Object.freeze({ code: "invalid_request", status: 400, domain: "platform", messageTemplate: "external_id must be 1 to 255 printable characters with no surrounding whitespace." }),
   external_id_mismatch: Object.freeze({ code: "invalid_request", status: 400, domain: "platform", messageTemplate: "The body's external_id does not match the X-External-Id header; the header is authoritative." }),
   food_id_required: Object.freeze({ code: "invalid_request", status: 400, domain: "diary", messageTemplate: "food_id is required." }),
+  food_image_url_invalid: Object.freeze({ code: "invalid_request", status: 400, domain: "foods", messageTemplate: "image_url must be an https link of at most {limit} characters." }),
   goal_calories_invalid: Object.freeze({ code: "invalid_request", status: 400, domain: "diary", messageTemplate: "calories must be a JSON number of kcal, zero or more, or null to clear it." }),
   goal_counter_invalid: Object.freeze({ code: "invalid_request", status: 400, domain: "diary", messageTemplate: "{parameter} must be a whole number between 0 and {limit}, or null to clear it." }),
   goal_empty: Object.freeze({ code: "invalid_request", status: 400, domain: "diary", messageTemplate: "Send at least one of calories, targets, water_ml or steps." }),
@@ -172,14 +181,17 @@ export const ERROR_REASONS: Readonly<Record<TrackCoreErrorReason, ErrorReasonSpe
   modified_serving_conflict: Object.freeze({ code: "invalid_request", status: 400, domain: "diary", messageTemplate: "modified_serving and selected_serving_id name different servings." }),
   modified_serving_invalid: Object.freeze({ code: "invalid_request", status: 400, domain: "diary", messageTemplate: "modified_serving must name a serving in the snapshot by serving_id, or be null to clear the edit." }),
   name_required: Object.freeze({ code: "invalid_request", status: 400, domain: "foods", messageTemplate: "name is required." }),
+  name_too_long: Object.freeze({ code: "invalid_request", status: 400, domain: "foods", messageTemplate: "name may be at most {limit} characters." }),
   nutrient_not_live: Object.freeze({ code: "invalid_request", status: 400, domain: "foods", messageTemplate: "A serving's nutrition names a nutrient the catalogue does not carry." }),
   parameter_invalid: Object.freeze({ code: "invalid_request", status: 400, domain: "platform", messageTemplate: "{parameter} is not valid." }),
   parameter_required: Object.freeze({ code: "invalid_request", status: 400, domain: "platform", messageTemplate: "{parameter} is required." }),
   partial_serving_list_refused: Object.freeze({ code: "invalid_request", status: 400, domain: "foods", messageTemplate: "include_servings=false is refused: every food read carries every serving." }),
   range_end_before_start: Object.freeze({ code: "invalid_request", status: 400, domain: "platform", messageTemplate: "`to` is before `from`." }),
   range_too_long: Object.freeze({ code: "invalid_request", status: 400, domain: "platform", messageTemplate: "The range may span at most {limit} days." }),
+  recipe_not_editable: Object.freeze({ code: "invalid_request", status: 400, domain: "foods", messageTemplate: "A recipe cannot be edited: its nutrition is computed from its ingredients." }),
   records_empty: Object.freeze({ code: "invalid_request", status: 400, domain: "health", messageTemplate: "records must hold at least one record." }),
   region_invalid: Object.freeze({ code: "invalid_request", status: 400, domain: "image", messageTemplate: "region must be two letters." }),
+  serving_listed_twice: Object.freeze({ code: "invalid_request", status: 400, domain: "foods", messageTemplate: "A serving_id appears more than once in servings." }),
   serving_nutrition_invalid: Object.freeze({ code: "invalid_request", status: 400, domain: "foods", messageTemplate: "A serving's nutrition carries a value that is not valid." }),
   serving_nutrition_unreadable: Object.freeze({ code: "invalid_request", status: 400, domain: "foods", messageTemplate: "A serving's nutrition is not a readable nutrition document." }),
   servings_count_out_of_range: Object.freeze({ code: "invalid_request", status: 400, domain: "foods", messageTemplate: "Between 1 and {limit} servings are required." }),

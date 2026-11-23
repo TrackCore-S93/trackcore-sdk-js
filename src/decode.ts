@@ -54,6 +54,7 @@ import type {
   ErasureReceipt,
   Card,
   OwnFoodSearchResults,
+  OwnFoodPage,
   NutritionPlan,
 } from "./models.js";
 
@@ -177,6 +178,7 @@ export const decodeLoggedFood = (body: JsonValue): LoggedFood => decode<LoggedFo
 export const decodeCardList = (body: JsonValue): CardList => decode<CardList>(body);
 export const decodeCard = (body: JsonValue): Card => decode<Card>(body);
 export const decodeOwnFoodSearchResults = (body: JsonValue): OwnFoodSearchResults => decode<OwnFoodSearchResults>(body);
+export const decodeOwnFoodPage = (body: JsonValue): OwnFoodPage => decode<OwnFoodPage>(body);
 export const decodeDeletionReceipt = (body: JsonValue): DeletionReceipt => decode<DeletionReceipt>(body);
 export const decodeReorderResult = (body: JsonValue): ReorderResult => decode<ReorderResult>(body);
 export const decodeCopyResult = (body: JsonValue): CopyResult => decode<CopyResult>(body);

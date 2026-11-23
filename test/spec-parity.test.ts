@@ -92,6 +92,7 @@ const DECLARED: Record<string, { all: string[]; optional: string[] }> = {
       "food_type",
       "name",
       "brand",
+      "image_url",
       "servings",
       "default_serving_id",
       "measurements",
@@ -105,6 +106,10 @@ const DECLARED: Record<string, { all: string[]; optional: string[] }> = {
       "updated_at",
       "etag",
     ],
+    optional: [],
+  },
+  OwnFoodPage: {
+    all: ["external_id", "foods", "next_cursor", "environment"],
     optional: [],
   },
   Serving: {
