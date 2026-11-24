@@ -143,6 +143,16 @@
       "required_fields": []
     },
     {
+      "reason": "context_too_long",
+      "code": "invalid_request",
+      "status": 400,
+      "domain": "nlp",
+      "message_template": "context may be at most {limit} characters.",
+      "required_fields": [
+        "limit"
+      ]
+    },
+    {
       "reason": "cursor_invalid",
       "code": "invalid_request",
       "status": 400,

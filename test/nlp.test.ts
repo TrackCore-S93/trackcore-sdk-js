@@ -112,3 +112,76 @@ describe("nlp cooking method", () => {
     expect(result.cooking_method).toBe("grilled");
   });
 });
+
+describe("nlp follow-ups", () => {
+  const MEAL =
+    '{"text":"2 eggs. add 1 chicken breast","transcript":"add 1 chicken breast","cooking_method":null,"items":[{"phrase":"eggs","quantity":2,"unit":null,"status":"matched","food":null,"serving_id":null,"consumed_quantity":2,"consumed_nutrition":null},{"phrase":"chicken breast","quantity":1,"unit":null,"status":"matched","food":null,"serving_id":null,"consumed_quantity":1,"consumed_nutrition":null}],"query":"2 eggs. add 1 chicken breast","search_type":"keyword","page":0,"page_size":10,"page_size_clamped":false,"total_results":null,"has_more":false,"results":[]}';
+
+  function answering(body: string, seen: { sent?: unknown }): FetchLike {
+    return async (_input, init) => {
+      seen.sent = init.body;
+      return {
+        status: 200,
+        headers: new Headers({ "Content-Type": "application/json", "X-Request-Id": "req_test" }),
+        text: async () => body,
+      } as unknown as Response;
+    };
+  }
+
+  it("sends the meal so far beside the text and reads both transcripts back", async () => {
+    const seen: { sent?: unknown } = {};
+    const client = new TrackCore({ apiKey: SECRET, fetch: answering(MEAL, seen) });
+    const result = await client.nlp.search("add 1 chicken breast", { context: "2 eggs" });
+    expect(String(seen.sent)).toBe('{"text":"add 1 chicken breast","context":"2 eggs"}');
+    expect(result.transcript).toBe("add 1 chicken breast");
+    expect(result.text).toBe("2 eggs. add 1 chicken breast");
+    // The whole meal, not only what was added.
+    expect(result.items.map((item) => item.phrase)).toEqual(["eggs", "chicken breast"]);
+  });
+
+  it("sends the meal so far as a form field beside a recording", async () => {
+    const seen: { sent?: unknown } = {};
+    const client = new TrackCore({ apiKey: SECRET, fetch: answering(MEAL, seen) });
+    const result = await client.nlp.fromSpeech(
+      { bytes: new Uint8Array([0x52, 0x49, 0x46, 0x46]), filename: "speech.wav" },
+      { context: "2 eggs", cookingMethod: "boiled" },
+    );
+    const form = seen.sent;
+    if (!(form instanceof FormData)) throw new Error("expected FormData");
+    expect(form.get("context")).toBe("2 eggs");
+    expect(form.get("audio")).toBeInstanceOf(Blob);
+    expect(result.transcript).toBe("add 1 chicken breast");
+  });
+
+  it("sends no context for a first sentence, or for a blank one", async () => {
+    for (const options of [undefined, {}, { context: undefined }, { context: "" }, { context: "  \n" }]) {
+      const seen: { sent?: unknown } = {};
+      const client = new TrackCore({ apiKey: SECRET, fetch: answering(RESULT, seen) });
+      await client.nlp.search("chicken salad", options);
+      expect(String(seen.sent)).toBe('{"text":"chicken salad"}');
+
+      await client.nlp.fromSpeech({ bytes: new Uint8Array([0x52]), filename: "speech.wav" }, options);
+      const form = seen.sent;
+      if (!(form instanceof FormData)) throw new Error("expected FormData");
+      expect(form.has("context")).toBe(false);
+    }
+  });
+
+  it("reads a response from before follow-ups as transcript equal to text", async () => {
+    const seen: { sent?: unknown } = {};
+    const client = new TrackCore({ apiKey: SECRET, fetch: answering(RESULT, seen) });
+    const result = await client.nlp.search("chicken salad");
+    expect(result.transcript).toBe("chicken salad");
+    const old = new TrackCore({ apiKey: SECRET, fetch: answering(OLD_RESULT, seen) });
+    expect((await old.nlp.search("chicken salad")).transcript).toBe("chicken salad");
+  });
+
+  it("keeps an empty transcript when the follow-up recording was silent", async () => {
+    const silent = MEAL.replace('"transcript":"add 1 chicken breast"', '"transcript":""');
+    const seen: { sent?: unknown } = {};
+    const client = new TrackCore({ apiKey: SECRET, fetch: answering(silent, seen) });
+    const result = await client.nlp.search("", { context: "2 eggs. add 1 chicken breast" });
+    expect(result.transcript).toBe("");
+    expect(result.text).toBe("2 eggs. add 1 chicken breast");
+  });
+});

@@ -128,7 +128,7 @@ import type { JsonObject } from "./json.js";
 import type { BarcodeLookup, BatchReadResult, Food, NlpResult, SearchResults } from "./models.js";
 
 /** The SDK version, stamped into the `User-Agent`. Kept in step with package.json. */
-export const VERSION = "0.10.0";
+export const VERSION = "0.11.0";
 
 export const DEFAULT_BASE_URL = "https://api.trackcore.dev";
 
@@ -509,14 +509,18 @@ export class TrackCore {
 
   readonly nlp = {
     /**
-     * `POST /v1/nlp` with a transcript. Searches the catalog for ten foods.
-     * Does not transcribe.
+     * `POST /v1/nlp` with a transcript. Splits it into foods and resolves
+     * each. Does not transcribe. Pass `context` (the previous result's
+     * `text`) to apply the sentence to a meal already described.
      */
     search: (text: string, options?: SearchSpeechOptions): Promise<NlpResult> =>
       searchText(this, text, options),
     /**
      * `POST /v1/nlp` with a recording. whisper.cpp turns it into text, then
-     * the catalog is searched for ten foods. Pass bytes the app already recorded.
+     * the text is split into foods and each is resolved. Pass bytes the app
+     * already recorded. Pass `context` (the previous result's `text`) to
+     * apply the recording to a meal already described: one call returns the
+     * new recording's `transcript` and the whole meal.
      */
     fromSpeech: (audio: LabelImage, options?: SearchSpeechOptions): Promise<NlpResult> =>
       searchSpeech(this, audio, options),

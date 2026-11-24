@@ -47,6 +47,7 @@ export type TrackCoreErrorReason =
   | "body_not_json"
   | "body_required"
   | "capability_unknown"
+  | "context_too_long"
   | "cursor_invalid"
   | "custom_food_edit_empty"
   | "date_invalid"
@@ -150,6 +151,7 @@ export const ERROR_REASONS: Readonly<Record<TrackCoreErrorReason, ErrorReasonSpe
   body_not_json: Object.freeze({ code: "invalid_request", status: 400, domain: "platform", messageTemplate: "The body is not readable JSON." }),
   body_required: Object.freeze({ code: "invalid_request", status: 400, domain: "platform", messageTemplate: "A JSON body is required." }),
   capability_unknown: Object.freeze({ code: "invalid_request", status: 400, domain: "console", messageTemplate: "capabilities names a code that is unknown or not yet available." }),
+  context_too_long: Object.freeze({ code: "invalid_request", status: 400, domain: "nlp", messageTemplate: "context may be at most {limit} characters." }),
   cursor_invalid: Object.freeze({ code: "invalid_request", status: 400, domain: "platform", messageTemplate: "cursor is not one this list returned." }),
   custom_food_edit_empty: Object.freeze({ code: "invalid_request", status: 400, domain: "foods", messageTemplate: "The request changes nothing: send a name, a brand, an image_url, servings or a default_serving_id." }),
   date_invalid: Object.freeze({ code: "invalid_request", status: 400, domain: "platform", messageTemplate: "{parameter} must be a calendar date as YYYY-MM-DD." }),

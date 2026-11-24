@@ -451,11 +451,23 @@ export interface NlpItem {
  * `items` is the sentence split and resolved, in the order spoken. `results`
  * is the matched foods, each once, in item order; when the gateway could not
  * split the sentence it is one ten-food search of the whole text and `items`
- * is empty.
+ * is empty. On a follow-up `items` is the whole meal after the new sentence
+ * was applied to the meal so far.
  */
 export interface NlpResult {
-  /** The transcript after trimming. Empty when nothing was said. */
+  /**
+   * Everything that was resolved. For a first sentence, that sentence. On a
+   * follow-up (a call with `context`), the context with the new sentence
+   * after it: show it to the user and pass it as the next call's `context`.
+   * Empty when nothing was said.
+   */
   readonly text: string;
+  /**
+   * What this call heard or was sent, on its own: the recording's transcript
+   * or the typed text. The same as `text` unless the call carried a
+   * `context`. Empty when the recording was silent.
+   */
+  readonly transcript: string;
   /** The `cookingMethod` the search was steered by, or `null` when none was sent. */
   readonly cooking_method: CookingMethod | null;
   readonly items: readonly NlpItem[];
