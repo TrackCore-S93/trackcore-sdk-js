@@ -9,6 +9,7 @@ import { join } from "node:path";
 
 import { TrackCore } from "../src/client.js";
 import { Decimal } from "../src/decimal.js";
+import { consumedQuantityFor } from "../src/measurements.js";
 import { ResourceError, ValidationError } from "../src/errors.js";
 import { BATCH_MAX_IDS, batchFoods, getFood, lookupBarcode, searchFoods } from "../src/resources/foods.js";
 import type { FetchLike } from "../src/transport.js";
@@ -247,6 +248,35 @@ describe("barcode lookup", () => {
     expect(result.status).toBe("not_found");
     expect(result.food).toBeNull();
     expect(result.suggestion_url).toBe("/v1/foods/suggestions");
+  });
+
+  it("carries the size of the whole package as exact decimals", async () => {
+    const body =
+      '{"barcode":"737628064502","barcode_format":"UPC_A","status":"found","resolved_by":"open_food_facts",' +
+      '"food":{"servings":[{"serving_id":"off:1","base_quantity":1,"metric_amount":52.0,"metric_unit":"g"}],' +
+      '"default_serving_id":"off:1","measurements":[{"label":"g","kind":"weight","serving_id":"off:1",' +
+      '"consumed_quantity_per_unit":0.01923077}],' +
+      '"package_quantity":155,"package_unit":"g","servings_per_container":2.9808}}';
+    const { client: tc } = client(body);
+    const food = (await tc.barcode.lookup("737628064502")).food;
+    expect(food?.package_quantity).toEqual(new Decimal("155"));
+    expect(food?.package_unit).toBe("g");
+    expect(food?.servings_per_container).toEqual(new Decimal("2.9808"));
+    // The whole package, logged by the gram: the package size is the amount.
+    const unit = food?.measurements.find((m) => m.label === food.package_unit);
+    if (unit === undefined || food?.package_quantity == null) throw new Error("no unit to log the package in");
+    expect(consumedQuantityFor(unit, food.package_quantity).toString()).toBe("2.9808");
+  });
+
+  it("a product whose source prints no pack size has null package fields", async () => {
+    const body =
+      '{"barcode":"0049000000443","barcode_format":"UPC_A","status":"found","resolved_by":"fatsecret",' +
+      '"food":{"servings":[],"package_quantity":null,"package_unit":null,"servings_per_container":null}}';
+    const { client: tc } = client(body);
+    const food = (await tc.barcode.lookup("0049000000443")).food;
+    expect(food?.package_quantity).toBeNull();
+    expect(food?.package_unit).toBeNull();
+    expect(food?.servings_per_container).toBeNull();
   });
 
   it("surfaces invalid_barcode from the server", async () => {

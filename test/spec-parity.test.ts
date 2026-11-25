@@ -96,6 +96,9 @@ const DECLARED: Record<string, { all: string[]; optional: string[] }> = {
       "servings",
       "default_serving_id",
       "measurements",
+      "package_quantity",
+      "package_unit",
+      "servings_per_container",
       "data_quality",
       "ingredients",
       "directions",
@@ -249,7 +252,7 @@ describe.skipIf(!available)("the decimal contract", () => {
       "gram_weight_per_household_unit",
       "metric_amount",
     ]);
-    expect(decimalFields["Food"]).toEqual(["recipe_servings"]);
+    expect(decimalFields["Food"]).toEqual(["package_quantity", "servings_per_container", "recipe_servings"]);
     expect(decimalFields["EnergyReconciliation"]?.sort()).toEqual([
       "computed_value",
       "provider_value",

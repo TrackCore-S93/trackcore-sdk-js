@@ -210,8 +210,18 @@ export interface Serving {
   readonly serving_id: ServingId;
   /** Always `1` today: re-issue detection needs the food cache (T-025). */
   readonly serving_id_version: number;
+  /**
+   * The provider's words for one of this serving. A leading number is cleaned
+   * off where it only repeats `base_quantity` (`1/2 cup` beside 0.5 is `cup`)
+   * and kept where it is the only place the amount is written: `1/3 bar
+   * (30 g)`, `3 cookies`, `8 fl oz`, each with a `base_quantity` of 1.
+   */
   readonly description: string;
-  /** `null` on a metric serving, and `null` when one unit's weight is unknown. */
+  /**
+   * The head of `description`, amount included where it keeps one: `medium`,
+   * `1/3 bar`. `null` on a metric serving, and `null` when one unit's weight
+   * is unknown.
+   */
   readonly household_unit: string | null;
   /**
    * **How many of this serving the serving's own `nutrition` describes** — a
@@ -248,7 +258,11 @@ export interface Serving {
  * whose `base_quantity` is 1 logs a gram as 0.01.
  */
 export interface Measurement {
-  /** `g`, `ml`, `oz`, or the head of the provider's wording: `small`, `cup cooked`. */
+  /**
+   * `g`, `ml`, `oz`, or the head of the provider's wording: `small`,
+   * `cup cooked`. A portion sold as an amount keeps the amount, written as
+   * the provider wrote it: `6 oz container`, `3 cookies`, `1/3 bar`.
+   */
   readonly label: string;
   /** The rest of the provider's wording, `null` when the label is all there was. */
   readonly detail: string | null;
@@ -298,6 +312,31 @@ export interface Food {
    * before the field existed, which is the one place to guard for it.
    */
   readonly measurements: readonly Measurement[];
+  /**
+   * The net contents of the **whole package**, in `package_unit`: 400 for a
+   * 400 g jar, 1980 for six 33 cl cans. It is what the source prints on the
+   * pack, read strictly.
+   *
+   * `null` wherever it is not known for certain: the source printed none (no
+   * FatSecret food has one), or the text can be read two ways. Always `null`
+   * on a food the end user made. Absent from a `food_snapshot` stored before
+   * the field existed.
+   */
+  readonly package_quantity: Decimal | null;
+  /** The unit of `package_quantity`. `null` exactly where that is. */
+  readonly package_unit: "g" | "ml" | null;
+  /**
+   * How many of the **default serving** the package holds, to four decimals:
+   * 8 for a 240 g box whose default serving is 30 g.
+   *
+   * To log the whole package, send the default serving's id as
+   * `selectedServingId` and `servings_per_container × that serving's
+   * base_quantity` as `consumedQuantity`.
+   *
+   * `null` where `package_quantity` is, and where the package and the default
+   * serving are in different units: millilitres are never divided by grams.
+   */
+  readonly servings_per_container: Decimal | null;
   readonly data_quality: DataQuality;
   readonly ingredients: readonly Readonly<Record<string, unknown>>[] | null;
   readonly directions: readonly string[] | null;
